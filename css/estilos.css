@@ -233,6 +233,7 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .filtro-ciudad-icono { width: 16px; height: 16px; display: block; }
 .filtro-ciudad-icono svg { width: 100%; height: 100%; display: block; }
 .filtro-ciudad-x { display: grid; place-items: center; width: 18px; height: 18px; margin-left: 2px; border-radius: 50%; background: rgba(255, 255, 255, .25); font-size: 10px; line-height: 1; }
+@keyframes abrir-filtros { from { opacity: 0; transform: translateY(-6px); } }
 @keyframes aparecer-etiqueta { from { opacity: 0; transform: scale(.85); } }
 .filtros .filtro-chips { flex: 0 1 auto; min-width: 0; }
 .filtros .filtro-ciudad { margin-left: auto; } /* junto al buscador, a la derecha */
@@ -243,6 +244,9 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
   /* si las categorías no caben, se desvanecen en el borde para indicar que se pueden deslizar */
   .filtros:has(.filtro-ciudad:not([hidden])) .filtro-chips { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); padding-right: 20px; }
 }
+/* Botón y panel de filtros: en escritorio el panel no existe como caja (sus hijos van directo en la barra) */
+.filtros-panel { display: contents; }
+.filtros-boton { display: none; }
 .buscador { position: relative; flex: 0 1 300px; }
 .buscador-icono { position: absolute; left: 12px; top: 50%; width: 18px; transform: translateY(-50%); color: var(--suave); pointer-events: none; }
 .buscador input { width: 100%; font: 500 14px var(--fuente); color: var(--tinta); padding: 10px 12px 10px 38px; border: 1px solid var(--linea); border-radius: 10px; background: var(--fondo); transition: border-color .2s, background .2s, box-shadow .2s; }
@@ -498,6 +502,18 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
   .cifra-etiqueta { font-size: 10.5px; letter-spacing: .1em; }
   .filtros { top: calc(var(--cab-alto) + 6px); padding: 8px; border-radius: 14px; }
   .buscador { flex: 1 1 100%; order: -1; }
+  /* Celular: la barra es un botón compacto; al tocarlo se despliegan buscador y categorías */
+  .filtros { gap: 0; }
+  .filtros-boton { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 4px 6px 4px 8px; border: 0; background: none; color: var(--azul); font: 700 14px var(--fuente); cursor: pointer; text-align: left; }
+  .filtros-boton-icono { width: 20px; height: 20px; flex: none; color: var(--acento); }
+  .filtros-boton-icono svg { width: 100%; height: 100%; display: block; }
+  .filtros-boton-resumen { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; color: var(--suave); }
+  .filtros.con-filtro .filtros-boton-resumen { color: #fff; background: var(--acento); font-weight: 600; font-size: 13px; padding: 3px 10px; border-radius: 999px; flex: 0 1 auto; margin-right: auto; }
+  .filtros-boton-flecha { flex: none; width: 9px; height: 9px; margin: 0 4px -2px auto; border: solid var(--azul); border-width: 0 2px 2px 0; transform: translateY(-3px) rotate(45deg); transition: transform .25s var(--curva); }
+  .filtros.abierto .filtros-boton-flecha { transform: translateY(1px) rotate(-135deg); }
+  .filtros-panel { display: none; flex-wrap: wrap; gap: 10px; width: 100%; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--linea); }
+  .filtros.abierto .filtros-panel { display: flex; animation: abrir-filtros .25s var(--curva); }
+  .filtros-panel .filtro-chips { flex: 1 1 100%; }
   .filtros .filtro-ciudad { margin-left: 0; order: -1; } /* en celular, arriba junto al buscador */
   .categoria { padding-top: 44px; }
   .categoria-cuenta { margin-left: 0; width: 100%; }
