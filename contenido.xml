@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ════════════════════════════════════════════════════════════════════
+   HUTCHISON PORTS MÉXICO · CONTENIDO DEL SITIO
+  ════════════════════════════════════════════════════════════════════
+   Todo lo que se ve en la página sale de este archivo.
+   Edítalo, guárdalo y recarga el navegador para ver el cambio.
+
+   • Textos ........ escribe entre las etiquetas. En <texto> y <linea> se
+                     permite <b>negrita</b>, <i>cursiva</i> y <a url="...">link</a>.
+   • Fotos ......... ruta dentro de img/ (img/foto.jpg) o una dirección https://
+   • Links ......... atributo url="...".
+   • Redes ......... <red tipo="web|linkedin|youtube|facebook|instagram|x|brochure|expansion" url="..."/>
+                     brochure y expansion se ven como botón con texto ("Brochure",
+                     "Expansión"); con texto="..." cambias lo que dice el botón.
+                     Solo aparecen las que escribas, en el orden que las escribas.
+                     Si una red NO tiene link (url="" o url="#"), su ícono NO aparece:
+                     puedes dejarla escrita y llenarle el url cuando lo tengas.
+   • Teléfono ...... escríbelo como quieras que se vea; el link para llamar
+                     se genera solo (también entiende "Ext.").
+
+   DATOS DE CONTACTO DE CADA EMPRESA
+   ─────────────────────────────────
+   Dentro de <empresa> puedes poner TODAS las que quieras de cada una y en
+   el ORDEN que quieras; se muestran exactamente en ese orden:
+
+     <direccion>   una o varias <linea>, o el texto directo
+     <telefono>    <celular>   <whatsapp>   <fax>
+     <correo>      <web>       <horario>
+     <cualquier-otra-etiqueta>   también se muestra (con un ícono de info)
+
+   Atributos opcionales en cualquiera de ellas:
+     etiqueta="Ventas"   pone un título pequeño arriba del dato
+     url="..."           cambia a dónde lleva el link
+     icono="telefono"    usa otro ícono (ubicacion, telefono, whatsapp, fax,
+                         correo, web, reloj, info)
+     visible="no"        lo oculta sin borrarlo
+
+   Cada <direccion> es un link: al tocarla abre Google Maps con esa dirección.
+   Si Maps no la ubica bien, pon url="..." con el link de la ficha de Google
+   Maps; para que no sea link, como-llegar="no".
+
+   Dos formas de acomodarlos:
+     1) De corrido:  direccion1, telefono1, correo1, direccion2, telefono2…
+        → cada <direccion> que aparece después de otros datos abre un
+          bloque nuevo (con una línea separadora).
+     2) Por separado: direccion1, direccion2, telefono1, telefono2, telefono3…
+     3) Opcional: agrupa con <sede nombre="Oficina Veracruz">…</sede>
+        para poner un título a cada bloque.
+
+   FOTOS DE LA TARJETA (opcional)
+   ──────────────────────────────
+   Un slider 16:9 arriba de la tarjeta. Pon una o varias <foto>; con una sola
+   se ve fija, sin flechas. Si no pones <fotos>, la tarjeta queda como siempre.
+     <fotos>
+       <foto alt="Descripción de la foto">img/tarjetas/archivo.jpg</foto>
+     </fotos>
+   Ideal: fotos horizontales de 1280×720 px (16:9) en JPG, de menos de 400 KB.
+
+   También puedes repetir <ciudad> si la empresa está en varias ciudades,
+   y agregar una <descripcion> que sale debajo del logo.
+
+   Hay una empresa de ejemplo al final (visible="no"): cámbiala a
+   visible="si" para verla.
+   • Categorías: nombre="..." es el título; corto="..." es lo que sale en el menú.
+   • Categorías y empresas aparecen en el mismo orden que aquí.
+     Para agregar una empresa, copia un bloque <empresa>…</empresa> completo.
+     Para ocultarla sin borrarla, ponle visible="no".
+
+  ════════════════════════════════════════════════════════════════════
+-->
+<sitio>
+
+  <general>
+    <titulo>Hutchison Ports México</titulo>
+    <descripcion>Directorio de terminales y servicios de Hutchison Ports en México: contenedores, intermodal, cruceros, multipropósito, astillero y logística.</descripcion>
+    <color-principal>#0b2a5c</color-principal>
+    <color-acento>#1592d3</color-acento>
+    <!-- Cómo se acomodan los links al pie de cada tarjeta: filas | banda | compacto -->
+    <estilo-enlaces>filas</estilo-enlaces>
+    <!-- Efecto animado sutil detrás del directorio: rutas | patio | diagonales | ninguno -->
+    <efecto-fondo>rutas</efecto-fondo>
+  </general>
+
+  <portada>
+    <antetitulo>Directorio</antetitulo>
+    <titulo>Hutchison Ports en México</titulo>
+    <texto>
+      <p><b>Hutchison Ports</b> es la división de puertos y servicios relacionados de <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
+    </texto>
+    <foto alt="Patio intermodal con grúa reach stacker cargando contenedores al tren">img/patio-intermodal.jpg</foto>
+    <foto alt="Vista aérea de una terminal de contenedores con grúas pórtico">img/terminal-contenedores.jpg</foto>
+    <redes>
+      <red tipo="web" url="https://hutchisonports.com/" />
+      <red tipo="linkedin" url="https://www.linkedin.com/company/hutchison-ports/" />
+      <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+      <red tipo="facebook" url="" />
+      <red tipo="brochure" url="docs/HPH_flyer_2024.pdf" />
+      <red tipo="expansion" url="docs/HP_HSummit_Folleto3.pdf" />
+    </redes>
+  </portada>
+
+  <!-- ═══════════════ MAPA: PRESENCIA EN MÉXICO ═══════════════
+       Un <punto> por ciudad. ciudad="..." debe escribirse igual que en <ciudad> de las
+       empresas (así se cuentan y se filtran). lat/lon: coordenadas (Google Maps → clic
+       derecho en el lugar → las copias). etiqueta="derecha|izquierda|arriba|abajo":
+       de qué lado va el nombre, para que no se encimen.
+       <corredor de="..." a="..."/> dibuja una línea animada entre dos ciudades.
+       Para quitar el mapa, pon visible="no". -->
+  <mapa titulo="Presencia en México" subtitulo="Terminales en el Pacífico, el Golfo de México y el centro del país, conectadas por corredores logísticos.">
+    <punto ciudad="Ensenada" lat="31.85" lon="-116.62" etiqueta="derecha" />
+    <punto ciudad="Manzanillo" lat="19.05" lon="-104.32" etiqueta="izquierda" />
+    <punto ciudad="Lázaro Cárdenas" lat="17.95" lon="-102.19" etiqueta="abajo" />
+    <punto ciudad="Atotonilco de Tula" lat="20.0" lon="-99.22" etiqueta="arriba" />
+    <punto ciudad="Veracruz" lat="19.2" lon="-96.13" etiqueta="derecha" />
+    <corredor de="Atotonilco de Tula" a="Veracruz" />
+    <corredor de="Atotonilco de Tula" a="Manzanillo" />
+    <corredor de="Atotonilco de Tula" a="Lázaro Cárdenas" />
+  </mapa>
+
+  <!-- ═══════════════ TERMINAL DE CONTENEDORES ═══════════════ -->
+  <categoria id="contenedores" nombre="Terminal de contenedores" corto="Contenedores">
+
+    <empresa id="icave">
+      <nombre>ICAVE</nombre>
+      <!-- Fotos de ejemplo: reemplázalas por las de la terminal -->
+      <fotos>
+        <foto alt="Patio de contenedores con grúa cargando el tren">img/tarjetas/ejemplo-1.jpg</foto>
+        <foto alt="Vista aérea del patio de contenedores">img/tarjetas/ejemplo-2.jpg</foto>
+        <foto alt="Grúas pórtico junto al muelle">img/tarjetas/ejemplo-3.jpg</foto>
+      </fotos>
+      <ciudad>Veracruz</ciudad>
+      <direccion>
+        <linea><b>Ave. Morelos No. 159</b>, Esq. Emparan</linea>
+        <linea>Col. Centro, 91700.</linea>
+        <linea>Veracruz, Ver., México.</linea>
+      </direccion>
+      <telefono>+52 (229) 989.5400</telefono>
+      <telefono>+52 (229) 989.5401</telefono>
+      <correo>mac@icave.com.mx</correo>
+      <redes>
+        <red tipo="web" url="https://www.hutchisonportsicave.com/" />
+        <red tipo="linkedin" url="https://www.linkedin.com/company/hutchison-ports-icave?originalSubdomain=mx" />
+        <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="https://www.facebook.com/HPICAVE" />
+        <red tipo="brochure" url="docs/icave_flyer2026.pdf" />
+      </redes>
+    </empresa>
+
+    <empresa id="lct">
+      <nombre>LCT</nombre>
+      <ciudad>Lázaro Cárdenas</ciudad>
+      <direccion>
+        <linea><b>Blvd. de Las Islas No. 1 Módulo 14</b></linea>
+        <linea>Col. Isla del Cayacal, 60950.</linea>
+        <linea>Lázaro Cárdenas, Mich., México.</linea>
+      </direccion>
+      <telefono>+52 (753) 533.0500</telefono>
+      <correo>mac@lctpc.com.mx</correo>
+      <redes>
+        <red tipo="web" url="https://www.hutchisonportslct.com/" />
+        <red tipo="linkedin" url="https://mx.linkedin.com/company/hutchison-ports-lct" />
+        <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="https://www.facebook.com/HutchisonPortsLCT" />
+        <red tipo="brochure" url="docs/LCT_Flyer2026.pdf" />
+        <red tipo="expansion" url="docs/LCT_FaseIII_trip_espDigitalb.pdf" />
+      </redes>
+    </empresa>
+
+    <empresa id="eit">
+      <nombre>EIT</nombre>
+      <ciudad>Ensenada</ciudad>
+      <direccion>
+        <linea><b>Blvd. Tte. José Azueta No. 224</b></linea>
+        <linea>Int Recinto Portuario, 22800.</linea>
+        <linea>Ensenada, Baja California, México</linea>
+      </direccion>
+      <telefono>+52 (646) 178.8801</telefono>
+      <correo>mac_eit@enseit.com</correo>
+      <redes>
+        <red tipo="web" url="https://www.hutchisonportseit.com/" />
+        <red tipo="linkedin" url="https://mx.linkedin.com/company/hutchison-ports-eit" />
+        <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="https://www.facebook.com/HutchisonPortsEIT" />
+        <red tipo="brochure" url="docs/EIT_Flyer2026.pdf" />
+      </redes>
+    </empresa>
+
+    <empresa id="timsa">
+      <nombre>TIMSA</nombre>
+      <ciudad>Manzanillo</ciudad>
+      <direccion>
+        <linea><b>Blvd. Miguel de la Madrid No. 286</b></linea>
+        <linea>Col. Tapeixtles, 28239.</linea>
+        <linea>Manzanillo, Colima, México</linea>
+      </direccion>
+      <telefono>+52 (314) 331.2701</telefono>
+      <correo>mac@timsamx.com</correo>
+      <redes>
+        <red tipo="web" url="https://www.hutchisonportstimsa.com/" />
+        <red tipo="linkedin" url="https://mx.linkedin.com/company/hutchison-ports-timsa" />
+        <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="https://www.facebook.com/HutchisonPortsTIMSA" />
+        <red tipo="brochure" url="docs/TIMSA_Flyer2026.pdf" />
+      </redes>
+    </empresa>
+
+  </categoria>
+
+  <!-- ═══════════════ TERMINAL INTERMODAL LOGÍSTICA ═══════════════ -->
+  <categoria id="intermodal" nombre="Terminal intermodal logística" corto="Intermodal">
+
+    <empresa id="tilh">
+      <nombre>TILH</nombre>
+      <!-- Con una sola foto se muestra fija (ejemplo: reemplázala) -->
+      <fotos>
+        <foto alt="Patio intermodal con tren de contenedores">img/tarjetas/ejemplo-1.jpg</foto>
+      </fotos>
+      <ciudad>Atotonilco de Tula</ciudad>
+      <direccion>
+        <linea><b>Ctra. Federal Jorobas-Tula Km. 9.7</b></linea>
+        <linea>Localidad Conejos, 42800.</linea>
+        <linea>Atotonilco de Tula, Hidalgo, México</linea>
+      </direccion>
+      <telefono>+52 (591) 917.7300</telefono>
+      <correo>comercial@tilh.com.mx</correo>
+      <redes>
+        <red tipo="web" url="https://www.hutchisonportstilh.com/" />
+        <red tipo="linkedin" url="https://mx.linkedin.com/company/hutchison-ports-tilh" />
+        <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="https://www.facebook.com/hptilh" />
+        <red tipo="brochure" url="docs/TILH_Flyer2026.pdf" />
+      </redes>
+    </empresa>
+
+  </categoria>
+
+  <!-- ═══════════════ TERMINAL DE CRUCEROS ═══════════════ -->
+  <categoria id="cruceros" nombre="Terminal de cruceros" corto="Cruceros">
+
+    <empresa id="ecv">
+      <nombre>ECV</nombre>
+      <ciudad>Ensenada</ciudad>
+      <direccion>
+        <linea><b>Blvd. Costero, S/N</b></linea>
+        <linea>Zona Centro, 22800.</linea>
+        <linea>Ensenada, Baja California, México.</linea>
+      </direccion>
+      <telefono>+52 (646) 178.8801 Ext.3306</telefono>
+      <correo>info@hutchisonportsecv.com</correo>
+      <redes>
+        <red tipo="web" url="https://www.hutchisonportsecv.com/" />
+        <red tipo="linkedin" url="https://mx.linkedin.com/company/hutchison-ports-ecv" />
+        <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="https://www.facebook.com/HutchisonPortsECV" />
+        <red tipo="brochure" url="" />
+      </redes>
+    </empresa>
+
+  </categoria>
+
+  <!-- ═══════════════ TERMINAL MULTIPROPÓSITO ═══════════════ -->
+  <categoria id="multiproposito" nombre="Terminal multipropósito" corto="Multipropósito">
+
+    <empresa id="lcmt">
+      <nombre>LCMT</nombre>
+      <ciudad>Lázaro Cárdenas</ciudad>
+      <direccion>
+        <linea><b>Recinto Portuario</b>, 60953.</linea>
+        <linea>Lázaro Cárdenas, Mich., México.</linea>
+      </direccion>
+      <telefono>+52 (753) 533.0500</telefono>
+      <correo>mac@lctpc.com.mx</correo>
+      <redes>
+        <red tipo="web" url="https://hutchisonportslcmt.com/" />
+        <red tipo="linkedin" url="https://mx.linkedin.com/company/hutchison-ports-lcmt" />
+        <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="" />
+        <red tipo="brochure" url="docs/LCMT_flyer2026.pdf" />
+      </redes>
+    </empresa>
+
+  </categoria>
+
+  <!-- ═══════════════ ASTILLERO ═══════════════ -->
+  <categoria id="astillero" nombre="Astillero" corto="Astillero">
+
+    <empresa id="tng">
+      <nombre>TNG</nombre>
+      <ciudad>Veracruz</ciudad>
+      <direccion>
+        <linea><b>Islote de San Juan de Ulúa S/N</b></linea>
+        <linea>Col. Astilleros de Veracruz, 91800.</linea>
+        <linea>Veracruz, Ver., México</linea>
+      </direccion>
+      <telefono>+52 (229) 989.2500</telefono>
+      <whatsapp>+52 (299) 989.2500</whatsapp>
+      <correo>tng@tnghph.com.mx</correo>
+      <redes>
+        <red tipo="web" url="https://www.hutchisonportstng.com/" />
+        <red tipo="linkedin" url="https://www.linkedin.com/company/hutchisonportstng" />
+        <red tipo="youtube" url="https://www.youtube.com/@TnghphMx" />
+        <red tipo="facebook" url="https://www.facebook.com/HutchisonPortsTNG" />
+        <red tipo="instagram" url="https://hutchisonportstng.com/es" />
+        <red tipo="brochure" url="docs/tng_brochure2026.pdf" />
+      </redes>
+    </empresa>
+
+  </categoria>
+
+  <!-- ═══════════════ OTROS SERVICIOS ═══════════════ -->
+  <categoria id="otros-servicios" nombre="Otros servicios" corto="Otros servicios">
+
+    <empresa id="hutchison-logistics">
+      <nombre>Hutchison Logistics</nombre>
+      <ciudad>Veracruz</ciudad>
+      <direccion>
+        <linea><b>Ave. Morelos No. 159</b>, Esq. Emparan</linea>
+        <linea>Col. Centro, 91700.</linea>
+        <linea>Veracruz, Ver., México.</linea>
+      </direccion>
+      <telefono>+52 (229) 989.5400</telefono>
+      <correo>info@hutchisonlogistics.com.mx</correo>
+      <redes>
+        <red tipo="web" url="https://hutchisonlogistics.com/" />
+        <red tipo="linkedin" url="https://www.linkedin.com/company/hutchison-logistics/" />
+        <red tipo="youtube" url="https://www.youtube.com/@HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="" />
+        <red tipo="brochure" url="" />
+      </redes>
+    </empresa>
+
+    <!-- Con <logo> se usa una imagen en lugar del logotipo generado -->
+    <empresa id="container-care">
+      <nombre>Container Care</nombre>
+      <logo>img/container-care.png</logo>
+      <ciudad>Veracruz</ciudad>
+      <direccion>
+        <linea><b>Bahía Norte S/N</b>, Interior del Recinto Portuario</linea>
+        <linea>Zona de Ampliación y Modernización del</linea>
+        <linea>Puerto de Veracruz. Veracruz, Ver., México.</linea>
+      </direccion>
+      <telefono>+52 (229) 989.7000</telefono>
+      <correo>ccioperaciones@cgini.com</correo>
+      <correo>ccisantafe@cgini.com</correo>
+      <redes>
+        <red tipo="web" url="https://www.container-care.com/" />
+        <red tipo="linkedin" url="" />
+        <red tipo="youtube" url="https://www.youtube.com/@HutchisonPortsM%C3%A9xico" />
+        <red tipo="facebook" url="" />
+        <red tipo="brochure" url="" />
+      </redes>
+    </empresa>
+
+    <!-- ▼ EJEMPLO de datos múltiples. Cambia visible="no" por visible="si" para verlo. -->
+    <empresa id="ejemplo" visible="no">
+      <nombre>Ejemplo</nombre>
+      <ciudad>Veracruz</ciudad>
+      <ciudad>Manzanillo</ciudad>
+      <descripcion>Empresa ficticia para mostrar cómo se ven varios datos de contacto.</descripcion>
+
+      <!-- Forma 1: de corrido (dirección, teléfono y correo; luego otra dirección…) -->
+      <direccion etiqueta="Oficina central">
+        <linea><b>Av. Ejemplo No. 100</b></linea>
+        <linea>Col. Centro, 91700. Veracruz, Ver.</linea>
+      </direccion>
+      <telefono>+52 (229) 000.0001</telefono>
+      <correo>central@ejemplo.com</correo>
+
+      <direccion etiqueta="Almacén">Calle Puerto No. 5, Manzanillo, Col.</direccion>
+      <telefono etiqueta="Recepción">+52 (314) 000.0002</telefono>
+      <telefono etiqueta="Operaciones">+52 (314) 000.0003 Ext. 12</telefono>
+      <whatsapp>+52 314 000 0004</whatsapp>
+      <correo>almacen@ejemplo.com</correo>
+      <horario>Lunes a viernes, 8:00 a 18:00</horario>
+
+      <!-- Forma 3: agrupado con título -->
+      <sede nombre="Oficina Ciudad de México">
+        <direccion>Paseo de la Reforma 000, CDMX</direccion>
+        <direccion>Piso 12, Torre B</direccion>
+        <telefono>+52 (55) 0000.0005</telefono>
+        <correo>cdmx@ejemplo.com</correo>
+        <correo>ventas@ejemplo.com</correo>
+      </sede>
+
+      <redes>
+        <red tipo="web" url="" />
+        <red tipo="linkedin" url="" />
+      </redes>
+    </empresa>
+
+  </categoria>
+
+  <!-- PIE DE PÁGINA
+       En <texto>, {año} se cambia solo por el año actual.
+       <leyenda> va debajo del copyright. <enlace> son los links del pie (se muestran en el
+       orden escrito); si un enlace no tiene url, no aparece. -->
+  <pie>
+    <texto>© {año} Hutchison Ports México. Todos los derechos reservados.</texto>
+    <leyenda>Hutchison Ports es miembro de <b>CK Hutchison Holdings Limited</b>.</leyenda>
+    <enlace url="https://hutchisonports.com/">Hutchison Ports global</enlace>
+    <!-- ⚠ Pendiente: pon aquí el link o el PDF del aviso de privacidad (ej. docs/aviso-de-privacidad.pdf) -->
+    <enlace url="">Aviso de privacidad</enlace>
+    <redes>
+      <red tipo="web" url="https://hutchisonports.com/" />
+      <red tipo="linkedin" url="https://www.linkedin.com/company/hutchison-ports/" />
+      <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
+    </redes>
+  </pie>
+
+</sitio>
