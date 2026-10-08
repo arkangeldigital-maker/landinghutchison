@@ -35,6 +35,7 @@
     izq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
     der: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
     buscar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    filtro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
     flecha: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14m0 0-6-6m6 6 6-6"/></svg>',
     arriba: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>'
   };
@@ -679,12 +680,19 @@
     return h('section', { class: 'directorio', id: 'directorio' },
       h('div', { class: 'directorio-fondo', 'aria-hidden': 'true' }),
       h('div', { class: 'contenedor' },
-        h('div', { class: 'filtros revelar' }, chips,
-          h('button', { type: 'button', class: 'filtro-ciudad', id: 'filtro-ciudad', hidden: 'hidden' },
-            h('span', { class: 'filtro-ciudad-icono', html: ICONOS.ubicacion }),
-            h('span', { class: 'filtro-ciudad-nombre' }),
-            h('span', { class: 'filtro-ciudad-x', 'aria-hidden': 'true', text: '✕' })),
-          buscador),
+        h('div', { class: 'filtros revelar' },
+          // Solo en celular: botón que abre y cierra el panel de filtros.
+          h('button', { type: 'button', class: 'filtros-boton', id: 'filtros-boton', 'aria-expanded': 'false', 'aria-controls': 'filtros-panel' },
+            h('span', { class: 'filtros-boton-icono', html: ICONOS.filtro }),
+            h('span', { class: 'filtros-boton-texto', text: 'Filtrar' }),
+            h('span', { class: 'filtros-boton-resumen', id: 'filtros-resumen', text: 'Todas' }),
+            h('span', { class: 'filtros-boton-flecha', 'aria-hidden': 'true' })),
+          h('div', { class: 'filtros-panel', id: 'filtros-panel' }, chips,
+            h('button', { type: 'button', class: 'filtro-ciudad', id: 'filtro-ciudad', hidden: 'hidden' },
+              h('span', { class: 'filtro-ciudad-icono', html: ICONOS.ubicacion }),
+              h('span', { class: 'filtro-ciudad-nombre' }),
+              h('span', { class: 'filtro-ciudad-x', 'aria-hidden': 'true', text: '✕' })),
+            buscador)),
         h('p', { class: 'sin-resultados', id: 'sin-resultados', hidden: 'hidden' }, 'No encontramos resultados. ',
           h('button', { type: 'button', class: 'link-limpiar', text: 'Ver todo el directorio' })),
         secciones));
@@ -1137,7 +1145,30 @@
       if (presencia) presencia.classList.toggle('filtrando', !!ciudad);
       var limpiar = document.querySelector('.presencia-limpiar');
       if (limpiar) limpiar.tabIndex = ciudad ? 0 : -1;
+      // Resumen en el botón de celular: lo que está filtrado, o "Todas".
+      var chipActivo = document.querySelector('.chip.activo');
+      var partes = [cat && chipActivo ? chipActivo.textContent : '', ciudad, input.value.trim() ? '“' + input.value.trim() + '”' : ''].filter(Boolean);
+      document.getElementById('filtros-resumen').textContent = partes.length ? partes.join(' · ') : 'Todas';
+      barra.classList.toggle('con-filtro', partes.length > 0);
     }
+    // Celular: el panel de filtros se abre con el botón y se cierra al elegir, al tocar fuera o con Esc.
+    var barra = document.querySelector('.filtros');
+    var boton = document.getElementById('filtros-boton');
+    var celular = window.matchMedia('(max-width: 700px)');
+    function abrirPanel(si) {
+      barra.classList.toggle('abierto', si);
+      boton.setAttribute('aria-expanded', String(si));
+    }
+    boton.addEventListener('click', function () { abrirPanel(!barra.classList.contains('abierto')); });
+    document.addEventListener('click', function (e) {
+      if (barra.classList.contains('abierto') && !barra.contains(e.target)) abrirPanel(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && barra.classList.contains('abierto')) { abrirPanel(false); boton.focus(); }
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && celular.matches) { input.blur(); abrirPanel(false); }
+    });
     function elegirCategoria(id) {
       cat = id;
       chips.forEach(function (c) { c.classList.toggle('activo', c.getAttribute('data-filtro') === id); });
@@ -1145,7 +1176,13 @@
     }
 
     chips.forEach(function (c) {
-      c.addEventListener('click', function () { elegirCategoria(c.getAttribute('data-filtro')); });
+      c.addEventListener('click', function () {
+        elegirCategoria(c.getAttribute('data-filtro'));
+        if (celular.matches) {
+          abrirPanel(false);
+          document.getElementById('directorio').scrollIntoView({ behavior: SIN_MOVIMIENTO ? 'auto' : 'smooth' });
+        }
+      });
     });
     input.addEventListener('input', aplicar);
     // Ciudades: desde la lista o desde el mapa. Elegir la misma otra vez quita el filtro.
