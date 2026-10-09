@@ -1,0 +1,12 @@
+{
+  "nota": "Acceso a subir.html. Cada token está cifrado con la contraseña de su usuario (PBKDF2 + AES-GCM). No edites a mano.",
+  "usuarios": [
+    {
+      "usuario": "admin",
+      "iteraciones": 600000,
+      "sal": "mg11MZmpF/bpHsbiBhz4uQ==",
+      "iv": "/Q2m6ld+HIt7UK73",
+      "datos": "Dw40AalEkSYt8QOZ6eMT5Yu84K3nOKDhlUP7zuIoiQasiuGDp6pm24PMR+DeJHHdgr/4s4HLKiA="
+    }
+  ]
+}
