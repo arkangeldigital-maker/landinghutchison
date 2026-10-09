@@ -104,8 +104,15 @@
   var MAX_FOTOS = 30;
   var FOTOS = {}; // carpeta → [rutas], se llena antes de cada render
 
-  // ¿Existe la imagen? En un servidor solo pide el encabezado (no la descarga);
-  // abriendo el archivo directo (file://) prueba cargarla.
+  // ¿Existe el archivo? En un servidor solo pide el encabezado (no lo descarga).
+  // Si el servidor responde con una página HTML a algo que no es .html, se toma como que no existe.
+  function existeArchivo(url) {
+    return fetch(url, { method: 'HEAD', cache: 'no-cache' })
+      .then(function (r) { return r.ok && (/\.html?([?#]|$)/i.test(url) || !/text\/html/i.test(r.headers.get('content-type') || '')); })
+      .catch(function () { return false; });
+  }
+
+  // ¿Existe la imagen? Abriendo el archivo directo (file://) prueba cargarla.
   function existeImagen(url) {
     if (location.protocol === 'file:') {
       return new Promise(function (ok) {
@@ -115,9 +122,7 @@
         img.src = url;
       });
     }
-    return fetch(url, { method: 'HEAD', cache: 'no-cache' })
-      .then(function (r) { return r.ok && !/text\/html/i.test(r.headers.get('content-type') || ''); })
-      .catch(function () { return false; });
+    return existeArchivo(url);
   }
 
   function fotosDeCarpeta(carpeta) {
@@ -151,6 +156,35 @@
       return fotos;
     });
   }
+
+  /* ============================ DOCUMENTOS QUE NO EXISTEN ============================ */
+
+  /* Los links a archivos del propio sitio (docs/brochure.pdf…) se revisan al cargar:
+     si el archivo no está, el botón no se muestra (así nunca hay links rotos).
+     Los links a otros sitios (https://…) no se pueden revisar y se muestran siempre. */
+  var FALTANTES = {}; // url → true si el archivo no existe
+
+  function esArchivoLocal(url) {
+    return !!url && url !== '#' && !/^[a-z][a-z0-9+.-]*:/i.test(url) && url.indexOf('//') !== 0 && url.charAt(0) !== '#';
+  }
+
+  function buscarFaltantes(doc) {
+    if (location.protocol === 'file:') return Promise.resolve({}); // sin servidor no se puede revisar
+    var urls = {};
+    ['red', 'enlace'].forEach(function (tag) {
+      Array.prototype.forEach.call(doc.getElementsByTagName(tag), function (el) {
+        var url = (el.getAttribute('url') || '').trim();
+        if (esArchivoLocal(url)) urls[url.split('#')[0]] = true;
+      });
+    });
+    var lista = Object.keys(urls);
+    return Promise.all(lista.map(existeArchivo)).then(function (existe) {
+      var faltan = {};
+      lista.forEach(function (u, i) { if (!existe[i]) faltan[u] = true; });
+      return faltan;
+    });
+  }
+  function faltaArchivo(url) { return !!FALTANTES[String(url || '').trim().split('#')[0]]; }
 
   /* ============================ DOM ============================ */
 
@@ -238,6 +272,7 @@
       // Sin link (vacío o "#") o con visible="no": el ícono no se muestra.
       var url = urlSegura(r.getAttribute('url'));
       if (!url || url === '#' || !visible(r)) return;
+      if (faltaArchivo(url)) return; // el documento no está en el servidor
       // texto="..." cambia lo que dice el botón (o el nombre que se lee al pasar el cursor).
       var nombre = r.getAttribute('texto') || NOMBRES_RED[tipo];
       var a = h('a', { class: 'red red-' + tipo, title: nombre, 'aria-label': nombre });
@@ -769,7 +804,7 @@
     var enlaces = h('ul', { class: 'pie-enlaces' });
     hijos(p, 'enlace').filter(visible).forEach(function (e) {
       var url = urlSegura(e.getAttribute('url'));
-      if (!url || url === '#' || !txt(e)) return;
+      if (!url || url === '#' || !txt(e) || faltaArchivo(url)) return;
       var a = prepararLink(inline(e, h('a')), url);
       if (/^https?:/i.test(url)) a.appendChild(h('span', { class: 'pie-externo', 'aria-hidden': 'true', text: ' ↗' }));
       enlaces.appendChild(h('li', null, a));
@@ -1338,10 +1373,13 @@
 
   var ultimoTexto = null;
 
-  // Busca las fotos de las carpetas y luego arma la página.
+  // Busca las fotos de las carpetas y los documentos que faltan; luego arma la página.
   function mostrar(doc, rapido) {
-    return buscarFotos(doc).then(function (fotos) {
-      FOTOS = fotos;
+    return Promise.all([buscarFotos(doc), buscarFaltantes(doc)]).then(function (r) {
+      FOTOS = r[0];
+      FALTANTES = r[1];
+      var faltan = Object.keys(FALTANTES);
+      if (faltan.length && ES_LOCAL) console.warn('Documentos que no existen (sus botones no se muestran):', faltan);
       render(doc, rapido);
     });
   }

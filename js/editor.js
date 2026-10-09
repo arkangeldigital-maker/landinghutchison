@@ -329,6 +329,39 @@
     return o.join('\n');
   }
 
+  /* ============================ DOCUMENTOS QUE NO EXISTEN ============================ */
+
+  // Los links a archivos del sitio (docs/…pdf) se revisan: si no existen, el sitio no
+  // muestra el botón, y aquí se avisa. Los https://… no se pueden revisar.
+  var archivos = {}; // url → true (existe) | false (no existe) | 'revisando'
+
+  function esArchivoLocal(url) {
+    return !!url && url !== '#' && !/^[a-z][a-z0-9+.-]*:/i.test(url) && url.indexOf('//') !== 0 && url.charAt(0) !== '#';
+  }
+  // undefined = todavía no se sabe; se revisa y luego se vuelve a validar.
+  function existeArchivo(url) {
+    url = String(url || '').trim().split('#')[0];
+    if (!esArchivoLocal(url) || location.protocol === 'file:') return true;
+    var e = archivos[url];
+    if (e === true || e === false) return e;
+    if (e !== 'revisando') {
+      archivos[url] = 'revisando';
+      fetch(url, { method: 'HEAD', cache: 'no-cache' })
+        .then(function (r) { return r.ok && (/\.html?$/i.test(url) || !/text\/html/i.test(r.headers.get('content-type') || '')); })
+        .catch(function () { return false; })
+        .then(function (si) { archivos[url] = si; if (!si) cambio(false, false, true); });
+    }
+    return true;
+  }
+  function avisosDocumentos(redes, quien, ancla, res) {
+    redes.forEach(function (r) {
+      var url = (r.url || '').trim();
+      if (url && !existeArchivo(url)) {
+        res.push({ nivel: 'aviso', texto: quien + ': ' + nombreDe(REDES, r.tipo) + ' apunta a «' + url + '» y ese archivo no existe en el sitio (el botón no se mostrará).', ancla: ancla });
+      }
+    });
+  }
+
   /* ============================ VALIDACIÓN ============================ */
 
   var RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -350,6 +383,14 @@
     var res = [];
     if (!m) return res;
     if (!String(m.general.titulo || '').trim()) res.push({ nivel: 'error', texto: 'General: falta el título de la pestaña.', ancla: 'sec-general' });
+    if (m.portada) avisosDocumentos(m.portada.redes, 'Portada', 'sec-portada', res);
+    if (m.pie) {
+      avisosDocumentos(m.pie.redes, 'Pie', 'sec-pie', res);
+      m.pie.enlaces.forEach(function (e) {
+        var url = (e.url || '').trim();
+        if (url && !existeArchivo(url)) res.push({ nivel: 'aviso', texto: 'Pie: el link «' + (e.texto || url) + '» apunta a «' + url + '» y ese archivo no existe (no se mostrará).', ancla: 'sec-pie' });
+      });
+    }
     var ids = {};
     var ciudadesMapa = m.mapa ? m.mapa.puntos.map(function (p) { return p.ciudad.trim(); }) : [];
     m.categorias.forEach(function (c, ci) {
@@ -358,6 +399,7 @@
       c.empresas.forEach(function (e) {
         var nombre = e.nombre.trim() || '(empresa sin nombre)', ancla = 'emp-' + clave(e);
         if (!e.nombre.trim()) res.push({ nivel: 'error', texto: c.nombre + ': hay una empresa sin nombre.', ancla: ancla });
+        avisosDocumentos(e.redes, nombre, ancla, res);
         if (!RE_ID.test(e.id)) res.push({ nivel: 'error', texto: nombre + ': el identificador solo puede tener minúsculas, números y guiones.', ancla: ancla });
         else if (ids[e.id]) res.push({ nivel: 'error', texto: nombre + ': el identificador «' + e.id + '» ya lo usa ' + ids[e.id] + '.', ancla: ancla });
         else ids[e.id] = nombre;
@@ -798,7 +840,7 @@
   /* ============================ CAMBIOS ============================ */
 
   var esperaGuardar, esperaEstado;
-  function cambio(repintar, enfocarUltimo) {
+  function cambio(repintar, enfocarUltimo, soloRevisar) {
     if (repintar) {
       pintar();
       if (enfocarUltimo) enfocarNuevo();
@@ -810,6 +852,7 @@
         actualizarInsignias(errores);
       }, 250);
     }
+    if (soloRevisar) return;
     clearTimeout(esperaGuardar);
     esperaGuardar = setTimeout(guardarBorrador, 600);
   }
