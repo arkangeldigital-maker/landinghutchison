@@ -11,6 +11,14 @@
   'use strict';
 
   var FUENTE = document.documentElement.getAttribute('data-xml') || 'contenido.xml';
+  // Si data-xml apunta a otro sitio (p. ej. el de GitHub Pages), las fotos, logos y documentos
+  // también se toman de allá: las rutas relativas del XML (img/…, docs/…) se resuelven contra esa carpeta.
+  var BASE = new URL('.', new URL(FUENTE, location.href)).href;
+  var REMOTO = BASE !== new URL('.', location.href).href;
+  function deSitio(u) {
+    if (!REMOTO || !u || u.charAt(0) === '#' || u.charAt(0) === '/' || /^[a-z][a-z0-9+.-]*:/i.test(u)) return u;
+    return new URL(u, BASE).href;
+  }
   var ES_LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   var SIN_MOVIMIENTO = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -130,7 +138,7 @@
     function buscar(n) {
       if (n > MAX_FOTOS) return Promise.resolve(lista);
       return Promise.all(EXTENSIONES.map(function (ext) {
-        var url = carpeta + '/' + n + '.' + ext;
+        var url = deSitio(carpeta + '/' + n + '.' + ext);
         return existeImagen(url).then(function (si) { return si ? url : null; });
       })).then(function (r) {
         var url = r.filter(Boolean)[0];
@@ -178,7 +186,7 @@
       });
     });
     var lista = Object.keys(urls);
-    return Promise.all(lista.map(existeArchivo)).then(function (existe) {
+    return Promise.all(lista.map(function (u) { return existeArchivo(deSitio(u)); })).then(function (existe) {
       var faltan = {};
       lista.forEach(function (u, i) { if (!existe[i]) faltan[u] = true; });
       return faltan;
@@ -215,7 +223,7 @@
       a.title = (a.title ? a.title + ' · ' : '') + 'Link pendiente';
       return a;
     }
-    a.href = href;
+    a.href = deSitio(href);
     // Otros sitios y documentos PDF se abren en una pestaña nueva.
     if (/^https?:/i.test(href) || /\.pdf([?#]|$)/i.test(href)) { a.target = '_blank'; a.rel = 'noopener'; }
     return a;
@@ -838,7 +846,7 @@
           el: e,
           id: (e.getAttribute('id') || '').replace(/[^a-z0-9-]/gi, ''),
           nombre: txt(e, 'nombre'),
-          logo: imagenSegura(txt(e, 'logo')),
+          logo: deSitio(imagenSegura(txt(e, 'logo'))),
           ciudades: hijos(e, 'ciudad').map(function (c) { return txt(c); }).filter(Boolean),
           redes: hijo(e, 'redes')
         };

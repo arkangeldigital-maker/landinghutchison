@@ -141,6 +141,20 @@ Si tiene `<logo>img/archivo.png</logo>`, se usa esa imagen (como Container Care)
 - Las fotos de la portada se extrajeron del PDF. Para mejor calidad, reemplázalas por los originales en alta resolución (mismo nombre: `img/portada/1.jpg`, `2.jpg`).
 - Las fotos de `img/icave/` y `img/tilh/` son de ejemplo: reemplázalas por las de cada terminal.
 
+## Azure mostrando el contenido que vive en GitHub
+
+Si prefieres que el contenido se administre en GitHub (con `editor.html` y `subir.html` de GitHub Pages) y que Azure
+solo muestre la página, cambia una línea del `index.html` que subes a Azure:
+
+```html
+<html lang="es" data-xml="https://arkangeldigital-maker.github.io/landinghutchison/contenido.xml">
+```
+
+Con eso el sitio lee el XML de GitHub Pages, y también de ahí toma las fotos (`img/…`), los logos y los PDF de `docs/`.
+En Azure solo hacen falta `index.html`, `css/estilos.css`, `js/sitio.js` y `img/favicon.svg`, `img/icono-180.png`,
+`img/compartir.jpg`. No subas a Azure `subir.html`, `editor.html` ni `admin/`, porque escribirían archivos que
+ese index ya no lee. Los cambios hechos en GitHub se ven en Azure en 1–2 minutos (lo que tarda Pages en publicar).
+
 ## Publicar en Azure (nginx + PHP)
 
 Sube la carpeta completa al directorio del sitio y da los permisos de escritura descritos arriba en
