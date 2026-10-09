@@ -91,6 +91,67 @@
   }
   function colorSeguro(c) { return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c) ? c : null; }
 
+  /* ============================ FOTOS POR CARPETA ============================ */
+
+  /* Las fotos no se escriben en el XML: se toman de carpetas dentro de img/.
+       img/portada/   → carrusel de la portada
+       img/<id>/      → slider de cada empresa (el id de <empresa id="icave"> → img/icave/)
+     Los archivos se llaman 1.jpg, 2.jpg, 3.jpg… (también .jpeg, .png o .webp) y salen en ese
+     orden. El navegador no puede ver qué hay en una carpeta, así que pregunta por 1, 2, 3…
+     hasta que falta un número: si borras la 2, la 3 en adelante ya no salen. */
+  var CARPETA_PORTADA = 'img/portada';
+  var EXTENSIONES = ['jpg', 'jpeg', 'png', 'webp'];
+  var MAX_FOTOS = 30;
+  var FOTOS = {}; // carpeta → [rutas], se llena antes de cada render
+
+  // ¿Existe la imagen? En un servidor solo pide el encabezado (no la descarga);
+  // abriendo el archivo directo (file://) prueba cargarla.
+  function existeImagen(url) {
+    if (location.protocol === 'file:') {
+      return new Promise(function (ok) {
+        var img = new Image();
+        img.onload = function () { ok(true); };
+        img.onerror = function () { ok(false); };
+        img.src = url;
+      });
+    }
+    return fetch(url, { method: 'HEAD', cache: 'no-cache' })
+      .then(function (r) { return r.ok && !/text\/html/i.test(r.headers.get('content-type') || ''); })
+      .catch(function () { return false; });
+  }
+
+  function fotosDeCarpeta(carpeta) {
+    var lista = [];
+    function buscar(n) {
+      if (n > MAX_FOTOS) return Promise.resolve(lista);
+      return Promise.all(EXTENSIONES.map(function (ext) {
+        var url = carpeta + '/' + n + '.' + ext;
+        return existeImagen(url).then(function (si) { return si ? url : null; });
+      })).then(function (r) {
+        var url = r.filter(Boolean)[0];
+        if (!url) return lista;
+        lista.push(url);
+        return buscar(n + 1);
+      });
+    }
+    return buscar(1);
+  }
+
+  function carpetaEmpresa(id) { return id ? 'img/' + id : null; }
+
+  // Busca en paralelo las fotos de la portada y de todas las empresas visibles.
+  function buscarFotos(doc) {
+    var carpetas = [CARPETA_PORTADA];
+    modelo(doc.documentElement).forEach(function (c) {
+      c.empresas.forEach(function (e) { if (e.id) carpetas.push(carpetaEmpresa(e.id)); });
+    });
+    return Promise.all(carpetas.map(fotosDeCarpeta)).then(function (listas) {
+      var fotos = {};
+      carpetas.forEach(function (c, i) { fotos[c] = listas[i]; });
+      return fotos;
+    });
+  }
+
   /* ============================ DOM ============================ */
 
   function h(tag, attrs) {
@@ -267,11 +328,9 @@
     if (!p) return null;
 
     var fotos = h('div', { class: 'portada-fotos' });
-    hijos(p, 'foto').forEach(function (f, i) {
-      var src = imagenSegura(txt(f));
-      if (!src) return;
+    (FOTOS[CARPETA_PORTADA] || []).forEach(function (src, i) {
       fotos.appendChild(h('div', { class: 'portada-foto' + (i === 0 ? ' activa' : '') },
-        h('img', { src: src, alt: f.getAttribute('alt') || '', fetchpriority: i === 0 ? 'high' : 'low', decoding: 'async' })));
+        h('img', { src: src, alt: '', fetchpriority: i === 0 ? 'high' : 'low', decoding: 'async' })));
     });
 
     // Título palabra por palabra para animarlo.
@@ -557,12 +616,15 @@
   }
 
   /* Slider de fotos 16:9 (opcional) arriba de la tarjeta.
-     Se desliza con el dedo (scroll-snap), con las flechas, con los puntos o con el teclado. */
-  function sliderFotos(cont, nombre) {
-    if (!cont || !visible(cont)) return null;
-    var fotos = hijos(cont, 'foto').filter(visible).map(function (f) {
-      return { src: imagenSegura(txt(f)), alt: f.getAttribute('alt') || 'Foto de ' + nombre };
-    }).filter(function (f) { return f.src; });
+     Se desliza con el dedo (scroll-snap), con las flechas, con los puntos o con el teclado.
+     Las fotos salen de img/<id de la empresa>/; <fotos visible="no"/> en el XML lo oculta. */
+  function sliderFotos(e) {
+    var nombre = e.nombre;
+    var cont = hijo(e.el, 'fotos');
+    if (cont && !visible(cont)) return null;
+    var fotos = (FOTOS[carpetaEmpresa(e.id)] || []).map(function (src, i, todas) {
+      return { src: src, alt: 'Foto de ' + nombre + (todas.length > 1 ? ' (' + (i + 1) + ' de ' + todas.length + ')' : '') };
+    });
     if (!fotos.length) return null;
     var varias = fotos.length > 1;
 
@@ -651,7 +713,7 @@
     },
       h('span', { class: 'tarjeta-brillo', 'aria-hidden': 'true' }),
       h('span', { class: 'tarjeta-esquina', 'aria-hidden': 'true' }),
-      sliderFotos(hijo(e.el, 'fotos'), e.nombre),
+      sliderFotos(e),
       h('header', { class: 'tarjeta-cab' }, logo, ciudades),
       hijo(e.el, 'descripcion') ? h('div', { class: 'tarjeta-descripcion' }, parrafos(hijo(e.el, 'descripcion'))) : null,
       contacto.children.length ? contacto : null,
@@ -1275,6 +1337,14 @@
   /* ============================ CARGA ============================ */
 
   var ultimoTexto = null;
+
+  // Busca las fotos de las carpetas y luego arma la página.
+  function mostrar(doc, rapido) {
+    return buscarFotos(doc).then(function (fotos) {
+      FOTOS = fotos;
+      render(doc, rapido);
+    });
+  }
   var archivoArrastrado = false; // si se arrastró un XML, deja de vigilar el del servidor
 
   function descargar() {
@@ -1316,13 +1386,14 @@
     var f = e.dataTransfer.files[0];
     if (!f || !/\.xml$/i.test(f.name)) return;
     f.text().then(function (t) {
-      try {
-        render(leerXml(t), !!ultimoTexto);
+      var doc;
+      try { doc = leerXml(t); }
+      catch (err) { aviso(err.message, 'error'); return; }
+      archivoArrastrado = true;
+      mostrar(doc, !!ultimoTexto).then(function () {
         ultimoTexto = t;
-        archivoArrastrado = true;
         aviso('Mostrando ' + f.name + ' (recarga la página para volver a ' + FUENTE + ')');
-      }
-      catch (err) { aviso(err.message, 'error'); }
+      });
     });
   });
 
@@ -1331,14 +1402,11 @@
       if (document.hidden || archivoArrastrado) return;
       descargar().then(function (t) {
         if (t === ultimoTexto) return;
-        try {
-          render(leerXml(t), true);
-          ultimoTexto = t;
-          aviso('Contenido actualizado desde ' + FUENTE);
-        } catch (err) {
-          ultimoTexto = t; // no repetir el mismo error cada 2 s
-          aviso(err.message, 'error');
-        }
+        ultimoTexto = t; // no repetir el mismo cambio (o el mismo error) cada 2 s
+        var doc;
+        try { doc = leerXml(t); }
+        catch (err) { aviso(err.message, 'error'); return; }
+        return mostrar(doc, true).then(function () { aviso('Contenido actualizado desde ' + FUENTE); });
       }).catch(function () {});
     }, 2000);
   }
@@ -1346,8 +1414,7 @@
   descargar()
     .then(function (t) {
       ultimoTexto = t;
-      render(leerXml(t), false);
-      if (ES_LOCAL) vigilar();
+      return mostrar(leerXml(t), false).then(function () { if (ES_LOCAL) vigilar(); });
     })
     .catch(function (err) {
       errorCarga(err);

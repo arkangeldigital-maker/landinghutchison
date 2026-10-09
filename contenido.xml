@@ -8,7 +8,7 @@
 
    • Textos ........ escribe entre las etiquetas. En <texto> y <linea> se
                      permite <b>negrita</b>, <i>cursiva</i> y <a url="...">link</a>.
-   • Fotos ......... ruta dentro de img/ (img/foto.jpg) o una dirección https://
+   • Fotos ......... NO se escriben aquí: se toman solas de carpetas (ver FOTOS abajo).
    • Links ......... atributo url="...".
    • Redes ......... <red tipo="web|linkedin|youtube|facebook|instagram|x|brochure|expansion" url="..."/>
                      brochure y expansion se ven como botón con texto ("Brochure",
@@ -48,14 +48,17 @@
      3) Opcional: agrupa con <sede nombre="Oficina Veracruz">…</sede>
         para poner un título a cada bloque.
 
-   FOTOS DE LA TARJETA (opcional)
-   ──────────────────────────────
-   Un slider 16:9 arriba de la tarjeta. Pon una o varias <foto>; con una sola
-   se ve fija, sin flechas. Si no pones <fotos>, la tarjeta queda como siempre.
-     <fotos>
-       <foto alt="Descripción de la foto">img/tarjetas/archivo.jpg</foto>
-     </fotos>
-   Ideal: fotos horizontales de 1280×720 px (16:9) en JPG, de menos de 400 KB.
+   FOTOS (se toman solas de carpetas dentro de img/)
+   ─────────────────────────────────────────────────
+     img/portada/        → carrusel de la portada
+     img/<id>/           → slider arriba de la tarjeta de cada empresa;
+                           <id> es el de <empresa id="icave"> → img/icave/
+   Nombra las fotos 1.jpg, 2.jpg, 3.jpg… (también .jpeg, .png o .webp, en
+   minúsculas). Salen en ese orden y sin saltos: si falta la 2, la 3 y las
+   siguientes no aparecen. Con una sola foto el slider se ve fijo; si la
+   carpeta está vacía o no existe, la tarjeta queda sin fotos.
+   Para ocultar las fotos de una empresa sin borrarlas: <fotos visible="no"/>
+   Ideal: portada 1920×1080 px; tarjetas 1280×720 px (16:9), JPG de menos de 400 KB.
 
    También puedes repetir <ciudad> si la empresa está en varias ciudades,
    y agregar una <descripcion> que sale debajo del logo.
@@ -88,8 +91,6 @@
     <texto>
       <p><b>Hutchison Ports</b> es la división de puertos y servicios relacionados de <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
     </texto>
-    <foto alt="Patio intermodal con grúa reach stacker cargando contenedores al tren">img/patio-intermodal.jpg</foto>
-    <foto alt="Vista aérea de una terminal de contenedores con grúas pórtico">img/terminal-contenedores.jpg</foto>
     <redes>
       <red tipo="web" url="https://hutchisonports.com/" />
       <red tipo="linkedin" url="https://www.linkedin.com/company/hutchison-ports/" />
@@ -123,12 +124,6 @@
 
     <empresa id="icave">
       <nombre>ICAVE</nombre>
-      <!-- Fotos de ejemplo: reemplázalas por las de la terminal -->
-      <fotos>
-        <foto alt="Patio de contenedores con grúa cargando el tren">img/tarjetas/ejemplo-1.jpg</foto>
-        <foto alt="Vista aérea del patio de contenedores">img/tarjetas/ejemplo-2.jpg</foto>
-        <foto alt="Grúas pórtico junto al muelle">img/tarjetas/ejemplo-3.jpg</foto>
-      </fotos>
       <ciudad>Veracruz</ciudad>
       <direccion>
         <linea><b>Ave. Morelos No. 159</b>, Esq. Emparan</linea>
@@ -212,10 +207,6 @@
 
     <empresa id="tilh">
       <nombre>TILH</nombre>
-      <!-- Con una sola foto se muestra fija (ejemplo: reemplázala) -->
-      <fotos>
-        <foto alt="Patio intermodal con tren de contenedores">img/tarjetas/ejemplo-1.jpg</foto>
-      </fotos>
       <ciudad>Atotonilco de Tula</ciudad>
       <direccion>
         <linea><b>Ctra. Federal Jorobas-Tula Km. 9.7</b></linea>
@@ -358,23 +349,18 @@
       <ciudad>Veracruz</ciudad>
       <ciudad>Manzanillo</ciudad>
       <descripcion>Empresa ficticia para mostrar cómo se ven varios datos de contacto.</descripcion>
-
-      <!-- Forma 1: de corrido (dirección, teléfono y correo; luego otra dirección…) -->
       <direccion etiqueta="Oficina central">
         <linea><b>Av. Ejemplo No. 100</b></linea>
         <linea>Col. Centro, 91700. Veracruz, Ver.</linea>
       </direccion>
       <telefono>+52 (229) 000.0001</telefono>
       <correo>central@ejemplo.com</correo>
-
       <direccion etiqueta="Almacén">Calle Puerto No. 5, Manzanillo, Col.</direccion>
       <telefono etiqueta="Recepción">+52 (314) 000.0002</telefono>
       <telefono etiqueta="Operaciones">+52 (314) 000.0003 Ext. 12</telefono>
       <whatsapp>+52 314 000 0004</whatsapp>
       <correo>almacen@ejemplo.com</correo>
       <horario>Lunes a viernes, 8:00 a 18:00</horario>
-
-      <!-- Forma 3: agrupado con título -->
       <sede nombre="Oficina Ciudad de México">
         <direccion>Paseo de la Reforma 000, CDMX</direccion>
         <direccion>Piso 12, Torre B</direccion>
@@ -382,7 +368,6 @@
         <correo>cdmx@ejemplo.com</correo>
         <correo>ventas@ejemplo.com</correo>
       </sede>
-
       <redes>
         <red tipo="web" url="" />
         <red tipo="linkedin" url="" />

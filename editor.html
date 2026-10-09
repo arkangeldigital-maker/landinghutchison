@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editor de contenido · Hutchison Ports México</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+
+  <!-- Editor de contenido.xml: llena el formulario y descarga el XML nuevo para subirlo al sitio.
+       Todo pasa en el navegador: no guarda nada en el servidor. -->
+  <header class="barra">
+    <div class="barra-marca">
+      <svg class="simbolo" viewBox="0 0 37.7 49.6" aria-hidden="true"><polygon points="0,0 37.7,0 37.7,6.5 0,28.6" fill="#1592d3"/><polygon points="0,38.6 37.7,16.6 37.7,49.6 0,49.6" fill="#fff"/></svg>
+      <div>
+        <strong>Editor de contenido</strong>
+        <span class="barra-origen">Editando: <span id="origen">—</span></span>
+      </div>
+    </div>
+    <div class="barra-acciones">
+      <label class="btn">
+        Abrir otro XML
+        <input type="file" id="abrir" accept=".xml,application/xml,text/xml" hidden>
+      </label>
+      <a class="btn" href="index.html" target="_blank" rel="noopener">Ver sitio ↗</a>
+    </div>
+  </header>
+
+  <div class="borrador" id="borrador" hidden></div>
+
+  <div class="sin-archivo-caja">
+    <h1>Abre el contenido.xml</h1>
+    <p>No se pudo leer el contenido del sitio automáticamente (pasa al abrir esta página con doble clic).
+      Arrastra aquí tu <b>contenido.xml</b> o elígelo:</p>
+    <label class="btn primario">
+      Elegir contenido.xml
+      <input type="file" accept=".xml,application/xml,text/xml" hidden onchange="document.getElementById('abrir').files = this.files; document.getElementById('abrir').dispatchEvent(new Event('change'));">
+    </label>
+  </div>
+
+  <div class="marco">
+    <nav class="indice" id="indice" aria-label="Secciones"></nav>
+    <main>
+      <div class="intro">
+        <p><b>Cómo funciona:</b> edita los datos, revisa que abajo diga «Todo listo» y pulsa <b>Descargar contenido.xml</b>.
+          Después sube ese archivo al sitio, reemplazando el anterior. Los campos con <span class="req">*</span> son obligatorios;
+          cada empresa necesita al menos una dirección, un teléfono y un correo. Redes, Brochure y Expansión son opcionales.</p>
+      </div>
+      <div id="formulario"></div>
+    </main>
+  </div>
+
+  <footer class="pie-fijo">
+    <div class="estado" id="estado"></div>
+    <span class="cambios" id="cambios" hidden>Cambios sin descargar</span>
+    <button type="button" class="btn primario grande" id="descargar">Descargar contenido.xml</button>
+  </footer>
+
+  <div class="mensaje" id="mensaje" role="status" hidden></div>
+  <div class="soltar" aria-hidden="true">Suelta el archivo .xml para abrirlo</div>
+
+  <script src="js/editor.js"></script>
+</body>
+</html>
