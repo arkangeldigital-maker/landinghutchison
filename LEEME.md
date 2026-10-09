@@ -63,6 +63,10 @@ Abre **`/subir.html`** en el sitio. Con usuario y contraseña permite:
 - Subir un **contenido.xml** nuevo (revisa que esté bien escrito antes de aceptarlo; el anterior se respalda).
 - Manejar las fotos de **`img/portada/`** y de **`img/<id>/`** de cada empresa: agregar (con el botón o arrastrándolas a la página), reemplazar, quitar (bote de basura) y cambiar el orden.
   Las fotos se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` de menos de 1 MB y se renumeran `1, 2, 3…` solas.
+- Subir y quitar **documentos en `docs/`** (PDF, Word, Excel, PowerPoint, ZIP; hasta 60 MB). Los nombres se limpian
+  (sin acentos ni espacios) y se marca «En uso» si `contenido.xml` tiene un link a ese archivo.
+  `docs/lista.json` se actualiza solo: de ahí `editor.html` saca la lista para el campo de link de Brochure, Expansión
+  y los links del pie (se elige de la lista o se pega un link externo).
 - **Publicar cambios** aplica todo junto.
 
 La página detecta sola dónde está:
@@ -72,9 +76,9 @@ La página detecta sola dónde está:
 Solo sube la carpeta completa. `subir.html` usa `admin/api.php` y guarda directo en el servidor.
 
 1. **Permisos:** el usuario de PHP-FPM (normalmente `www-data`) debe poder escribir en la raíz del sitio
-   (por `contenido.xml`), en `img/` y en `admin/`. Por ejemplo, si el sitio está en `/var/www/sitio`:
+   (por `contenido.xml`), en `img/`, en `docs/` y en `admin/`. Por ejemplo, si el sitio está en `/var/www/sitio`:
    ```bash
-   sudo chown -R www-data:www-data /var/www/sitio/img /var/www/sitio/admin /var/www/sitio/contenido.xml
+   sudo chown -R www-data:www-data /var/www/sitio/img /var/www/sitio/docs /var/www/sitio/admin /var/www/sitio/contenido.xml
    sudo chown www-data /var/www/sitio && sudo chmod 775 /var/www/sitio
    ```
    Si falta un permiso, `subir.html` lo avisa en rojo al abrir.

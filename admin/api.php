@@ -6,6 +6,8 @@
    · Usuarios: admin/usuarios.php (se crea solo desde subir.html; contraseñas con password_hash).
      Es un .php para que el servidor nunca lo muestre como texto.
    · Fotos nuevas: se suben una por una a admin/tmp/ y se colocan al publicar.
+   · Documentos: docs/ (PDF, Office…). Llegan en partes de menos de 1 MB (límite por defecto de nginx)
+     y docs/lista.json se regenera para que editor.html ofrezca la lista.
    · Respaldo: cada contenido.xml reemplazado se guarda en admin/respaldos/ (los últimos 30).
    ===================================================================== */
 declare(strict_types=1);
@@ -19,6 +21,9 @@ const EXTENSIONES = ['jpg', 'jpeg', 'png', 'webp'];
 const MAX_FOTOS = 30;          // el sitio no busca más de 30 por carpeta
 const MAX_FOTO = 8 * 1048576;  // bytes por foto
 const MAX_RESPALDOS = 30;
+const DOCS = 'docs';
+const EXT_DOCS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'jpg', 'jpeg', 'png', 'webp', 'txt', 'csv'];
+const MAX_DOC = 60 * 1048576;  // bytes por documento
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -115,6 +120,35 @@ function fotosDe(string $carpeta): array
   return $lista;
 }
 
+// Nombre de documento seguro: letras, números, punto, guion y guion bajo, con extensión permitida.
+function nombreDoc(string $n): string
+{
+  if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/', $n) || str_contains($n, '..')
+    || !in_array(strtolower(pathinfo($n, PATHINFO_EXTENSION)), EXT_DOCS, true)) {
+    fallar('Nombre de documento no válido: ' . $n);
+  }
+  return $n;
+}
+
+function listaDocs(): array
+{
+  $lista = [];
+  foreach (glob(RAIZ . '/' . DOCS . '/*') ?: [] as $f) {
+    $n = basename($f);
+    if (is_file($f) && $n[0] !== '.' && in_array(strtolower(pathinfo($n, PATHINFO_EXTENSION)), EXT_DOCS, true)) {
+      $lista[] = ['nombre' => $n, 'url' => DOCS . '/' . $n, 'tamano' => filesize($f)];
+    }
+  }
+  usort($lista, fn($a, $b) => strnatcasecmp($a['nombre'], $b['nombre']));
+  return $lista;
+}
+
+function guardarListaDocs(): void
+{
+  escribirAtomico(RAIZ . '/' . DOCS . '/lista.json',
+    json_encode(['documentos' => listaDocs()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n");
+}
+
 function limpiarTmp(): void
 {
   foreach (glob(TMP . '/*') ?: [] as $f) {
@@ -146,7 +180,7 @@ if ($metodo === 'POST' && !hash_equals(csrf(), $_SERVER['HTTP_X_CSRF'] ?? '')) {
 switch ($accion) {
 
   case 'estado':
-    $carpetas = ['raíz del sitio' => RAIZ, 'img' => RAIZ . '/img', 'admin' => __DIR__];
+    $carpetas = ['raíz del sitio' => RAIZ, 'img' => RAIZ . '/img', 'docs' => RAIZ . '/' . DOCS, 'admin' => __DIR__];
     $sinPermiso = array_keys(array_filter($carpetas, fn($c) => !is_writable($c)));
     responder([
       'modo' => 'php',
@@ -195,7 +229,25 @@ switch ($accion) {
       if ($c !== PORTADA && !preg_match('#^img/[a-z0-9][a-z0-9_-]*$#', $c)) continue;
       foreach (fotosDe($c) as $f) $rutas[$f['ruta']] = $f['version'];
     }
-    responder(['xml' => $xml, 'rutas' => $rutas]);
+    responder(['xml' => $xml, 'rutas' => $rutas, 'docs' => listaDocs()]);
+
+  case 'docs':
+    // Público a propósito: los documentos ya son públicos; editor.html usa esta lista.
+    responder(['documentos' => listaDocs()]);
+
+  case 'doc-parte':
+    // Un documento llega en partes: la primera crea el id, las siguientes se agregan al final.
+    pedirSesion();
+    $f = $_FILES['parte'] ?? null;
+    if (!$f || $f['error'] !== UPLOAD_ERR_OK) fallar('No llegó una parte del documento.');
+    if (!is_dir(TMP) && !@mkdir(TMP, 0775, true)) fallar('No se pudo crear admin/tmp: falta permiso de escritura en admin/.', 500);
+    $id = (string)($_POST['id'] ?? '');
+    if ($id === '') { limpiarTmp(); $id = bin2hex(random_bytes(12)); }
+    if (!preg_match('/^[a-f0-9]{24}$/', $id)) fallar('Id de documento no válido.');
+    $destino = TMP . '/' . $id . '.doc';
+    if ((is_file($destino) ? filesize($destino) : 0) + $f['size'] > MAX_DOC) fallar('El documento pesa más de ' . (MAX_DOC / 1048576) . ' MB.');
+    if (@file_put_contents($destino, file_get_contents($f['tmp_name']), FILE_APPEND) === false) fallar('No se pudo guardar el documento en admin/tmp.', 500);
+    responder(['id' => $id]);
 
   case 'foto':
     pedirSesion();
@@ -242,6 +294,13 @@ switch ($accion) {
     }
     $xml = isset($d['xml']) ? (string)$d['xml'] : null;
     if ($xml !== null) revisarXml($xml);
+    $docsSubir = [];
+    foreach ((array)($d['docs']['subir'] ?? []) as $doc) {
+      $id = (string)($doc['id'] ?? '');
+      if (!preg_match('/^[a-f0-9]{24}$/', $id) || !is_file(TMP . '/' . $id . '.doc')) fallar('Un documento nuevo ya no está en el servidor. Vuelve a agregarlo.');
+      $docsSubir[] = ['origen' => TMP . '/' . $id . '.doc', 'nombre' => nombreDoc((string)($doc['nombre'] ?? ''))];
+    }
+    $docsBorrar = array_map(fn($n) => nombreDoc((string)$n), (array)($d['docs']['borrar'] ?? []));
 
     // 2) contenido.xml (con respaldo del anterior).
     if ($xml !== null) {
@@ -274,6 +333,18 @@ switch ($accion) {
         if (!@rename($temporales[$i], RAIZ . '/' . $paso['destino'])) fallar('No se pudo guardar ' . $paso['destino'] . '.', 500);
         @chmod(RAIZ . '/' . $paso['destino'], 0664);
       }
+    }
+
+    // 4) Documentos y su lista para editor.html.
+    if ($docsSubir || $docsBorrar) {
+      $dir = RAIZ . '/' . DOCS;
+      if (!is_dir($dir) && !@mkdir($dir, 0775, true)) fallar('No se pudo crear docs/: falta permiso de escritura.', 500);
+      foreach ($docsBorrar as $n) if (is_file($dir . '/' . $n)) @unlink($dir . '/' . $n);
+      foreach ($docsSubir as $doc) {
+        if (!@rename($doc['origen'], $dir . '/' . $doc['nombre'])) fallar('No se pudo guardar docs/' . $doc['nombre'] . '.', 500);
+        @chmod($dir . '/' . $doc['nombre'], 0664);
+      }
+      guardarListaDocs();
     }
 
     if ($candado) { flock($candado, LOCK_UN); fclose($candado); }

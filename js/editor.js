@@ -496,7 +496,7 @@
       var esDoc = r.tipo === 'brochure' || r.tipo === 'expansion';
       filas.appendChild(h('div', { class: 'fila fila-red' },
         campo(null, r, 'tipo', { opciones: REDES, clase: 'c-tipo', repintar: true }),
-        campo(null, r, 'url', { placeholder: esDoc ? 'docs/archivo.pdf o https://…' : 'https://…', clase: 'c-url', tipo: 'text', inputmode: 'url' }),
+        campo(null, r, 'url', { placeholder: esDoc ? 'Elige un documento de docs/ o pega un link https://…' : 'https://…', clase: 'c-url', tipo: 'text', inputmode: 'url', lista: esDoc ? 'docs-sitio' : null }),
         esDoc ? campo(null, r, 'texto', { placeholder: 'Texto del botón (opcional)', clase: 'c-texto' }) : null,
         controlesFila(lista, i)));
     });
@@ -509,7 +509,7 @@
     return h('div', { class: 'bloque' },
       h('h4', { text: 'Redes y documentos' }, h('span', { class: 'opcional', text: ' · opcionales' })),
       filas, agregar,
-      h('p', { class: 'ayuda', text: 'Si un renglón queda sin link, no se muestra en el sitio (sirve para dejarlo pendiente).' }));
+      h('p', { class: 'ayuda', text: 'En Brochure y Expansión, al escribir o al pulsar la flecha del campo aparece la lista de documentos de docs/ (se suben en subir.html); también puedes pegar un link externo. Si un renglón queda sin link, no se muestra en el sitio.' }));
   }
 
   /* ---------- Datos de contacto ---------- */
@@ -742,7 +742,7 @@
     p.enlaces.forEach(function (e, i) {
       enlaces.appendChild(h('div', { class: 'fila fila-red' },
         campo(null, e, 'texto', { placeholder: 'Texto del link', clase: 'c-texto' }),
-        campo(null, e, 'url', { placeholder: 'https://… o docs/archivo.pdf', clase: 'c-url' }),
+        campo(null, e, 'url', { placeholder: 'https://… o un documento de docs/', clase: 'c-url', lista: 'docs-sitio' }),
         controlesFila(p.enlaces, i)));
     });
     s.cuerpo.appendChild(h('div', { class: 'bloque' },
@@ -1000,6 +1000,27 @@
     abrirArchivo(e.dataTransfer.files[0]);
   });
   window.addEventListener('beforeunload', function (e) { if (m && hayCambios()) { e.preventDefault(); e.returnValue = ''; } });
+
+  // Documentos de docs/ como sugerencias para los links (Brochure, Expansión, links del pie).
+  // Con PHP la lista sale del servidor; si no, de docs/lista.json (lo mantiene subir.html).
+  function cargarDocs() {
+    var dl = h('datalist', { id: 'docs-sitio' });
+    document.body.appendChild(dl);
+    function pedir(url, campoLista) {
+      return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { return j && Array.isArray(j[campoLista]) ? j[campoLista] : null; }).catch(function () { return null; });
+    }
+    pedir('admin/api.php?accion=docs', 'documentos')
+      .then(function (l) { return l || pedir('docs/lista.json?v=' + Date.now(), 'documentos'); })
+      .then(function (lista) {
+        (lista || []).forEach(function (d) {
+          var url = d.url || 'docs/' + d.nombre;
+          archivos[url] = true; // ya se sabe que existe
+          dl.appendChild(h('option', { value: url, label: d.nombre + (d.tamano ? ' · ' + Math.max(1, Math.round(d.tamano / 1024)) + ' KB' : '') }));
+        });
+      });
+  }
+  cargarDocs();
 
   fetch(FUENTE + '?v=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { if (!r.ok) throw new Error(); return r.text(); })

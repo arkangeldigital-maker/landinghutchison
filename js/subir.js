@@ -35,6 +35,11 @@
   var base = null;        // { commit, rutas: { ruta: sha } }
   var xmlActual = null;   // texto de contenido.xml en el repositorio
   var xmlNuevo = null;    // { texto, nombre, empresas } listo para subir
+  var docsNuevos = {};    // nombre → { archivo, id } documentos por subir a docs/
+  var docsBorrar = {};    // nombre → true documentos por quitar de docs/
+  var EXT_DOCS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'jpg', 'jpeg', 'png', 'webp', 'txt', 'csv'];
+  var MAX_DOC = 60 * 1048576;
+  var PARTE_DOC = 900 * 1024; // en PHP los documentos viajan en partes (nginx acepta 1 MB por petición)
   var carpetas = {};      // carpeta → { originales: [...], items: [...] }
   var miniaturas = {};    // sha → URL de la imagen
   var reemplazarEn = -1;
@@ -372,7 +377,7 @@
   function cargarRepositorio() {
     if (modo === 'php') {
       return api('archivos').then(function (r) {
-        base = { rutas: r.rutas };
+        base = { rutas: r.rutas, docs: r.docs || [] };
         xmlActual = r.xml;
       });
     }
@@ -383,8 +388,14 @@
         gh('/contents/contenido.xml?ref=' + commit, { crudo: true })
       ]).then(function (r) {
         var rutas = {};
-        r[0].tree.forEach(function (n) { if (n.type === 'blob') rutas[n.path] = n.sha; });
-        base = { commit: commit, rutas: rutas };
+        var docs = [];
+        r[0].tree.forEach(function (n) {
+          if (n.type !== 'blob') return;
+          rutas[n.path] = n.sha;
+          var m = n.path.match(/^docs\/([^/]+)$/);
+          if (m && m[1].charAt(0) !== '.' && EXT_DOCS.indexOf(extension(m[1])) >= 0) docs.push({ nombre: m[1], url: n.path, tamano: n.size });
+        });
+        base = { commit: commit, rutas: rutas, docs: docs };
         xmlActual = r[1];
       });
     });
@@ -397,6 +408,9 @@
     cargarRepositorio().then(function () {
       carpetas = {};
       xmlNuevo = null;
+      docsNuevos = {};
+      docsBorrar = {};
+      pintarDocs();
       pintarXml();
       pintarCarpetas();
       $('mensaje').hidden = true;
@@ -455,6 +469,7 @@
   $('xml-quitar').addEventListener('click', function () { xmlNuevo = null; pintarXml(); pintarCarpetas(); });
 
   function pintarXml() {
+    pintarDocs(); // «En uso» depende del XML
     var antes = empresasDe(xmlActual || '').length;
     $('xml-quitar').hidden = !xmlNuevo;
     $('xml-estado').innerHTML = '';
@@ -632,7 +647,7 @@
     if (!conArchivos(ev)) return;
     ev.preventDefault();
     if (arrastres++ === 0) {
-      $('soltar').textContent = 'Suelta las fotos para agregarlas a ' + nombreCarpeta(carpetaActual());
+      $('soltar').textContent = 'Suelta aquí: las fotos van a ' + nombreCarpeta(carpetaActual()) + ', los PDF y documentos a docs/';
       document.body.classList.add('arrastrando');
     }
   });
@@ -648,8 +663,105 @@
     var archivos = Array.prototype.slice.call(ev.dataTransfer.files);
     var xml = archivos.filter(function (f) { return /\.xml$/i.test(f.name); });
     if (xml.length) cargarXml(xml[0]);
-    agregarFotos(archivos.filter(function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name); }));
+    var esFoto = function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name); };
+    agregarFotos(archivos.filter(esFoto));
+    agregarDocs(archivos.filter(function (f) { return !esFoto(f) && !/\.xml$/i.test(f.name); }));
   });
+
+  /* ---------- Documentos (docs/) ---------- */
+
+  function extension(n) { var m = String(n).match(/\.([a-z0-9]+)$/i); return m ? m[1].toLowerCase() : ''; }
+
+  // «Folleto Año 2026.pdf» → «Folleto-Ano-2026.pdf» (así el link funciona en cualquier servidor).
+  function limpiarNombreDoc(n) {
+    return String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+      .replace(/[^A-Za-z0-9._-]/g, '').replace(/\.{2,}/g, '.').replace(/^[._-]+/, '').slice(-120);
+  }
+
+  function enUso(nombre) {
+    var xml = xmlNuevo ? xmlNuevo.texto : (xmlActual || '');
+    return xml.indexOf('docs/' + nombre) >= 0;
+  }
+
+  $('docs-agregar').addEventListener('change', function () {
+    var archivos = Array.prototype.slice.call(this.files);
+    this.value = '';
+    agregarDocs(archivos);
+  });
+
+  function agregarDocs(archivos) {
+    var malos = [];
+    archivos.forEach(function (a) {
+      var nombre = limpiarNombreDoc(a.name);
+      if (!nombre || EXT_DOCS.indexOf(extension(nombre)) < 0) return malos.push('«' + a.name + '» no es un tipo de documento permitido (' + EXT_DOCS.join(', ') + ').');
+      if (a.size > MAX_DOC) return malos.push('«' + a.name + '» pesa más de 60 MB.');
+      docsNuevos[nombre] = { archivo: a };
+      delete docsBorrar[nombre];
+    });
+    if (malos.length) avisar(malos.join(' '), true, 8000);
+    if (archivos.length) pintarDocs();
+  }
+
+  function pintarDocs() {
+    if (!base) return;
+    var cont = $('docs');
+    cont.innerHTML = '';
+    var actuales = {};
+    base.docs.forEach(function (d) { actuales[d.nombre] = d; });
+    var nombres = Object.keys(actuales).concat(Object.keys(docsNuevos).filter(function (n) { return !actuales[n]; }))
+      .sort(function (a, b) { return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' }); });
+    if (!nombres.length) cont.appendChild(h('p', { class: 'vacio', text: 'No hay documentos. Agrégalos con el botón o arrastrándolos a la página.' }));
+    nombres.forEach(function (n) {
+      var actual = actuales[n];
+      var nuevo = docsNuevos[n];
+      var borrar = docsBorrar[n];
+      var estado = nuevo ? (actual ? 'Reemplaza al actual' : 'Nuevo') : borrar ? 'Se quitará' : null;
+      var uso = enUso(n);
+      cont.appendChild(h('div', { class: 'doc' + (nuevo ? ' nuevo' : '') + (borrar ? ' borrar' : '') }, [
+        h('span', { class: 'doc-ext', text: extension(n).toUpperCase() }),
+        h('div', { class: 'doc-info' }, [
+          actual && !nuevo && !borrar ? h('a', { href: actual.url + '?v=' + actual.tamano, target: '_blank', rel: 'noopener', text: n }) : h('span', { class: 'doc-nombre', text: n }),
+          h('span', { class: 'doc-det', text: peso(nuevo ? nuevo.archivo.size : actual.tamano) + ' · docs/' + n }),
+        ]),
+        estado ? h('span', { class: 'insignia ' + (borrar ? 'roja' : 'azul'), text: estado }) : null,
+        uso ? h('span', { class: 'insignia gris', title: 'contenido.xml tiene un link a este archivo', text: 'En uso' }) : null,
+        borrar
+          ? h('button', { type: 'button', class: 'btn mini', text: 'Deshacer', onclick: function () { delete docsBorrar[n]; pintarDocs(); } })
+          : h('button', { type: 'button', class: 'btn-icono basura', title: nuevo ? 'No subir' : 'Quitar documento', 'aria-label': 'Quitar ' + n, html: ICONO_BASURA, onclick: function () {
+            if (nuevo) delete docsNuevos[n];
+            else {
+              if (uso && !confirm('contenido.xml tiene un link a docs/' + n + '. Si lo quitas, ese botón deja de mostrarse en el sitio. ¿Quitarlo?')) return;
+              docsBorrar[n] = true;
+            }
+            pintarDocs();
+          } })
+      ]));
+    });
+    resumir();
+  }
+
+  // Lista final de docs/ (para docs/lista.json en modo GitHub).
+  function listaDocsFinal() {
+    var lista = base.docs.filter(function (d) { return !docsBorrar[d.nombre] && !docsNuevos[d.nombre]; });
+    Object.keys(docsNuevos).forEach(function (n) { lista.push({ nombre: n, url: 'docs/' + n, tamano: docsNuevos[n].archivo.size }); });
+    return lista.sort(function (a, b) { return a.nombre.localeCompare(b.nombre, 'es', { numeric: true, sensitivity: 'base' }); });
+  }
+
+  function subirDocPhp(d) {
+    var archivo = d.archivo;
+    var partes = Math.max(1, Math.ceil(archivo.size / PARTE_DOC));
+    var id = '';
+    var cadena = Promise.resolve();
+    for (var i = 0; i < partes; i++) (function (i) {
+      cadena = cadena.then(function () {
+        var fd = new FormData();
+        fd.append('id', id);
+        fd.append('parte', archivo.slice(i * PARTE_DOC, (i + 1) * PARTE_DOC), 'parte');
+        return api('doc-parte', null, fd).then(function (r) { id = r.id; });
+      });
+    })(i);
+    return cadena.then(function () { d.id = id; });
+  }
 
   $('reemplazar').addEventListener('change', function () {
     var archivo = this.files[0];
@@ -673,7 +785,8 @@
   }
 
   function cambiosDeCarpetas() { return Object.keys(carpetas).filter(carpetaCambio); }
-  function hayCambios() { return !!xmlNuevo || cambiosDeCarpetas().length > 0; }
+  function hayCambiosDocs() { return Object.keys(docsNuevos).length + Object.keys(docsBorrar).length > 0; }
+  function hayCambios() { return !!xmlNuevo || cambiosDeCarpetas().length > 0 || hayCambiosDocs(); }
 
   function describir() {
     var partes = [];
@@ -682,6 +795,8 @@
       var n = carpetas[c].items.filter(function (it) { return it.tipo === 'nueva'; }).length;
       partes.push('fotos de ' + nombreCarpeta(c) + (n ? ' (' + n + (n === 1 ? ' nueva)' : ' nuevas)') : ''));
     });
+    var dn = Object.keys(docsNuevos).length, db = Object.keys(docsBorrar).length;
+    if (dn || db) partes.push('documentos (' + [dn ? dn + ' por subir' : '', db ? db + ' por quitar' : ''].filter(Boolean).join(', ') + ')');
     return partes;
   }
 
@@ -720,6 +835,21 @@
       });
     }, Promise.resolve());
 
+    // Documentos: en PHP por partes a admin/tmp/, en GitHub como blobs.
+    var docs = Object.keys(docsNuevos);
+    var docsHechos = 0;
+    subir = docs.reduce(function (p, n) {
+      return p.then(function () {
+        var d = docsNuevos[n];
+        if (d.id) return;
+        avisar('Subiendo documentos ' + (++docsHechos) + ' de ' + docs.length + ' (' + n + ')…', false, 0);
+        if (modo === 'php') return subirDocPhp(d);
+        return blobABase64(d.archivo).then(function (b64) {
+          return gh('/git/blobs', { method: 'POST', body: { content: b64, encoding: 'base64' } });
+        }).then(function (r) { d.id = r.sha; });
+      });
+    }, subir);
+
     var shaXml = null;
     subir.then(function () {
       if (modo !== 'php') return;
@@ -729,7 +859,14 @@
       cambiosDeCarpetas().forEach(function (c) {
         plan[c] = carpetas[c].items.map(function (it) { return it.tipo === 'nueva' ? { nueva: it.sha } : { existente: it.ruta }; });
       });
-      return api('publicar', { xml: xmlNuevo ? xmlNuevo.texto : undefined, carpetas: plan });
+      return api('publicar', {
+        xml: xmlNuevo ? xmlNuevo.texto : undefined,
+        carpetas: plan,
+        docs: {
+          subir: docs.map(function (n) { return { id: docsNuevos[n].id, nombre: n }; }),
+          borrar: Object.keys(docsBorrar)
+        }
+      });
     }).then(function () {
       if (modo === 'php' || !xmlNuevo) return;
       avisar('Subiendo contenido.xml…', false, 0);
@@ -750,7 +887,13 @@
           if (finales.indexOf(o.ruta) < 0) arbol.push({ path: o.ruta, mode: '100644', type: 'blob', sha: null });
         });
       });
+      docs.forEach(function (n) { arbol.push({ path: 'docs/' + n, mode: '100644', type: 'blob', sha: docsNuevos[n].id }); });
+      Object.keys(docsBorrar).forEach(function (n) { arbol.push({ path: 'docs/' + n, mode: '100644', type: 'blob', sha: null }); });
       var mensaje = 'Panel (' + sesion.usuario + '): ' + descripcion.join(', ');
+      if (hayCambiosDocs()) {
+        return gh('/git/blobs', { method: 'POST', body: { content: JSON.stringify({ documentos: listaDocsFinal() }, null, 2) + '\n', encoding: 'utf-8' } })
+          .then(function (r) { arbol.push({ path: 'docs/lista.json', mode: '100644', type: 'blob', sha: r.sha }); return commit(0); });
+      }
 
       // 3) Commit sobre la última versión de la rama (reintenta si alguien publicó en medio).
       function commit(intento) {
@@ -774,6 +917,9 @@
       return cargarRepositorio().then(function () {
         carpetas = {};
         xmlNuevo = null;
+        docsNuevos = {};
+        docsBorrar = {};
+        pintarDocs();
         pintarXml();
         pintarCarpetas();
         avisar(modo === 'php' ? 'Publicado. Ya está en el sitio.' : 'Publicado. El sitio se actualiza en 1 o 2 minutos.', false, 8000);
