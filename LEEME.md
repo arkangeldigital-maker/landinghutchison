@@ -88,6 +88,7 @@ Si tiene `<logo>img/archivo.png</logo>`, se usa esa imagen (como Container Care)
 ## Pendientes
 
 - Las redes y brochures sin link (`url=""` o `url="#"`) no se muestran. El brochure original no traía esas direcciones: al llenar el `url`, el ícono aparece solo.
+- Los links a archivos del sitio (`docs/archivo.pdf`) se revisan al cargar: **si el archivo no existe, el botón no se muestra** (no hay links rotos). El editor avisa cuáles faltan. Los links a otros sitios (`https://…`) no se pueden revisar y se muestran siempre.
 - Los sitios web de cada terminal se dedujeron del dominio de su correo: **hay que verificarlos**.
 - Las fotos de la portada se extrajeron del PDF. Para mejor calidad, reemplázalas por los originales en alta resolución (mismo nombre: `img/portada/1.jpg`, `2.jpg`).
 - Las fotos de `img/icave/` y `img/tilh/` son de ejemplo: reemplázalas por las de cada terminal.
