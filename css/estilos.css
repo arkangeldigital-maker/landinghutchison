@@ -479,6 +479,9 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
   .mnav .red-brochure { background: #fff; color: var(--azul); box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .5); }
   .mnav .red-brochure:not(.pendiente):hover { background: var(--acento); color: #fff; }
   .mnav .red { background: rgba(6, 26, 59, .35); }
+}
+/* Presencia en México: hasta 901 px (tableta horizontal) se queda en dos columnas, como en escritorio */
+@media (max-width: 900px) {
   .presencia.con-mapa .presencia-in { grid-template-columns: 1fr; }
   .presencia-mapa { order: -1; max-width: 640px; width: 100%; margin: 0 auto; }
 }
@@ -497,6 +500,9 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
   .red { width: 40px; height: 40px; }
   .cifras-in { gap: 14px; justify-content: space-between; }
   .presencia { padding-top: 40px; }
+  /* En celular basta el mapa (sus puntos también filtran); la lista de ciudades se oculta.
+     Si el sitio no tiene mapa, la lista se sigue mostrando. */
+  .presencia.con-mapa .presencia-ciudades { display: none; }
   .mapa-punto-in { transform: scale(1.6); } /* puntos y nombres legibles en pantalla chica */
   .mapa-corredor { stroke-width: 2.4; }
   .cifra-etiqueta { font-size: 10.5px; letter-spacing: .1em; }
