@@ -38,6 +38,7 @@
   var carpetas = {};      // carpeta → { originales: [...], items: [...] }
   var miniaturas = {};    // sha → URL de la imagen
   var reemplazarEn = -1;
+  var ICONO_BASURA = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
 
   /* ---------- Utilidades ---------- */
 
@@ -45,6 +46,7 @@
     var el = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
       if (k === 'text') el.textContent = attrs[k];
+      else if (k === 'html') el.innerHTML = attrs[k];
       else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), attrs[k]);
       else if (attrs[k] !== false && attrs[k] != null) el.setAttribute(k, attrs[k] === true ? '' : attrs[k]);
     });
@@ -431,7 +433,10 @@
   $('xml-archivo').addEventListener('change', function () {
     var archivo = this.files[0];
     this.value = '';
-    if (!archivo) return;
+    if (archivo) cargarXml(archivo);
+  });
+
+  function cargarXml(archivo) {
     archivo.text().then(function (texto) {
       var doc = leerXml(texto);
       var raizActual = xmlActual ? leerXml(xmlActual).documentElement.nodeName : null;
@@ -445,7 +450,7 @@
       pintarXml();
       pintarCarpetas();
     }).catch(function (e) { avisar(e.message, true, 8000); });
-  });
+  }
 
   $('xml-quitar').addEventListener('click', function () { xmlNuevo = null; pintarXml(); pintarCarpetas(); });
 
@@ -529,7 +534,7 @@
     var e = estadoDe(carpeta);
     var cont = $('fotos');
     cont.innerHTML = '';
-    if (!e.items.length) cont.appendChild(h('div', { class: 'fotos-vacio', text: 'Esta carpeta no tiene fotos. Agrega una o varias.' }));
+    if (!e.items.length) cont.appendChild(h('div', { class: 'fotos-vacio', text: 'Esta carpeta no tiene fotos. Arrástralas aquí o usa «+ Agregar fotos».' }));
     var finales = rutasFinales(carpeta, e.items);
     e.items.forEach(function (it, i) {
       var img = h('div', { class: 'foto-img' });
@@ -544,9 +549,9 @@
           h('button', { type: 'button', class: 'btn-icono', title: 'Mover antes', 'aria-label': 'Mover antes', disabled: i === 0, text: '←', onclick: function () { mover(i, -1); } }),
           h('button', { type: 'button', class: 'btn-icono', title: 'Mover después', 'aria-label': 'Mover después', disabled: i === e.items.length - 1, text: '→', onclick: function () { mover(i, 1); } }),
           h('span', { class: 'espacio' }),
-          h('button', { type: 'button', class: 'btn chico', text: 'Reemplazar', onclick: function () { reemplazarEn = i; $('reemplazar').click(); } }),
-          h('button', { type: 'button', class: 'btn chico peligro', text: 'Quitar', onclick: function () { e.items.splice(i, 1); pintarFotos(); } })
-        ])
+          h('button', { type: 'button', class: 'btn mini', title: 'Cambiar por otra foto', text: 'Reemplazar', onclick: function () { reemplazarEn = i; $('reemplazar').click(); } })
+        ]),
+        h('button', { type: 'button', class: 'btn-icono basura', title: 'Quitar foto', 'aria-label': 'Quitar foto', html: ICONO_BASURA, onclick: function () { e.items.splice(i, 1); pintarFotos(); } })
       ]));
     });
     var cambio = carpetaCambio(carpeta);
@@ -602,6 +607,11 @@
   $('fotos-agregar').addEventListener('change', function () {
     var archivos = Array.prototype.slice.call(this.files);
     this.value = '';
+    agregarFotos(archivos);
+  });
+
+  function agregarFotos(archivos) {
+    if (!archivos.length) return;
     var carpeta = carpetaActual();
     avisar('Preparando ' + archivos.length + (archivos.length === 1 ? ' foto…' : ' fotos…'), false, 0);
     Promise.all(archivos.map(function (a) { return prepararFoto(a, anchoDe(carpeta)).catch(function (e) { return e; }); }))
@@ -613,6 +623,32 @@
         if (malas.length) avisar(malas.map(function (m) { return m.message; }).join(' '), true, 8000);
         else $('mensaje').hidden = true;
       });
+  }
+
+  /* Arrastrar y soltar: fotos → a la carpeta elegida; un .xml → como contenido.xml. */
+  var arrastres = 0;
+  function conArchivos(ev) { return !$('vista-panel').hidden && ev.dataTransfer && Array.prototype.indexOf.call(ev.dataTransfer.types, 'Files') >= 0; }
+  window.addEventListener('dragenter', function (ev) {
+    if (!conArchivos(ev)) return;
+    ev.preventDefault();
+    if (arrastres++ === 0) {
+      $('soltar').textContent = 'Suelta las fotos para agregarlas a ' + nombreCarpeta(carpetaActual());
+      document.body.classList.add('arrastrando');
+    }
+  });
+  window.addEventListener('dragover', function (ev) { if (conArchivos(ev)) { ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; } });
+  window.addEventListener('dragleave', function (ev) {
+    if (conArchivos(ev) && --arrastres <= 0) { arrastres = 0; document.body.classList.remove('arrastrando'); }
+  });
+  window.addEventListener('drop', function (ev) {
+    if (!conArchivos(ev)) return;
+    ev.preventDefault();
+    arrastres = 0;
+    document.body.classList.remove('arrastrando');
+    var archivos = Array.prototype.slice.call(ev.dataTransfer.files);
+    var xml = archivos.filter(function (f) { return /\.xml$/i.test(f.name); });
+    if (xml.length) cargarXml(xml[0]);
+    agregarFotos(archivos.filter(function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name); }));
   });
 
   $('reemplazar').addEventListener('change', function () {

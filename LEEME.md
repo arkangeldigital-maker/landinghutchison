@@ -61,7 +61,7 @@ no subas `editor.html`, `js/editor.js` ni `css/editor.css` (el sitio funciona si
 Abre **`/subir.html`** en el sitio. Con usuario y contraseña permite:
 
 - Subir un **contenido.xml** nuevo (revisa que esté bien escrito antes de aceptarlo; el anterior se respalda).
-- Manejar las fotos de **`img/portada/`** y de **`img/<id>/`** de cada empresa: agregar, reemplazar, quitar y cambiar el orden.
+- Manejar las fotos de **`img/portada/`** y de **`img/<id>/`** de cada empresa: agregar (con el botón o arrastrándolas a la página), reemplazar, quitar (bote de basura) y cambiar el orden.
   Las fotos se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` de menos de 1 MB y se renumeran `1, 2, 3…` solas.
 - **Publicar cambios** aplica todo junto.
 
