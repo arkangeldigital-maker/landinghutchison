@@ -462,6 +462,9 @@
     raiz.appendChild(corredores);
 
     var grupo = svg('g', { class: 'mapa-puntos' });
+    // Los nombres van en su propia capa, encima de puntos, pulsos y corredores animados:
+    // dentro del punto, Safari de iPhone a veces dejaba de pintarlos.
+    var rotulos = svg('g', { class: 'mapa-rotulos', 'aria-hidden': 'true' });
     puntos.forEach(function (p, i) {
       var r = 7 + Math.min(p.n, 6) * 1.1;
       var dx = { derecha: r + 7, izquierda: -(r + 7), arriba: 0, abajo: 0 }[p.lado] || r + 7;
@@ -479,10 +482,14 @@
         svg('g', { class: 'mapa-punto-in' }, // se agranda en celular (CSS) sin mover el punto
           svg('circle', { class: 'mapa-pulso', r: r }),
           svg('circle', { class: 'mapa-nucleo', r: r }),
-          cuenta, etiqueta));
+          cuenta));
       grupo.appendChild(g);
+      rotulos.appendChild(svg('g', {
+        class: 'mapa-rotulo', transform: 'translate(' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ')', 'data-ciudad': p.ciudad, style: '--i:' + i
+      }, svg('g', { class: 'mapa-punto-in' }, etiqueta)));
     });
     raiz.appendChild(grupo);
+    raiz.appendChild(rotulos);
     return raiz;
   }
 
@@ -1294,7 +1301,7 @@
     if (limpiarMapa) limpiarMapa.addEventListener('click', quitarCiudad);
     // Tocar el mapa fuera de los puntos también quita el filtro.
     var mapaSvg = document.querySelector('.mapa-svg');
-    if (mapaSvg) mapaSvg.addEventListener('click', function (e) { if (!e.target.closest('.mapa-punto')) quitarCiudad(); });
+    if (mapaSvg) mapaSvg.addEventListener('click', function (e) { if (!e.target.closest('[data-ciudad]')) quitarCiudad(); });
     document.querySelectorAll('.presencia [data-ciudad]').forEach(function (b) {
       var nombre = b.getAttribute('data-ciudad');
       b.addEventListener('click', function () { elegirCiudad(nombre); });
