@@ -8,6 +8,8 @@ sitio/
 ├── index.html        ← estructura vacía (se llena desde el XML)
 ├── contenido.xml     ← EDITA ESTE ARCHIVO (a mano o con editor.html)
 ├── editor.html       ← formulario para editar contenido.xml sin tocar el código
+├── subir.html        ← panel con usuario y contraseña para subir el XML y las fotos
+├── admin/acceso.json ← usuarios del panel (token de GitHub cifrado con su contraseña)
 ├── css/estilos.css
 ├── js/sitio.js       ← lee el XML, arma la página y los efectos
 ├── img/              ← logos, íconos y carpetas de fotos:
@@ -53,6 +55,24 @@ y lo muestra como formulario: general, portada, mapa, categorías, empresas y pi
 
 El editor no guarda nada en el servidor: solo genera el archivo. Si no quieres que sea visible al público,
 no subas `editor.html`, `js/editor.js` ni `css/editor.css` (el sitio funciona sin ellos).
+
+## Subir cambios con usuario y contraseña (subir.html)
+
+Abre **`subir.html`** en el sitio publicado (o en http://localhost:5190/subir.html). Con usuario y contraseña permite:
+
+- Subir un **contenido.xml** nuevo (revisa que esté bien escrito antes de aceptarlo).
+- Manejar las fotos de **`img/portada/`** y de **`img/<id>/`** de cada empresa: agregar, reemplazar, quitar y cambiar el orden.
+  Las fotos se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` y se renumeran `1, 2, 3…` solas.
+- **Publicar cambios** guarda todo en un solo commit en GitHub; el workflow de Pages vuelve a publicar el sitio en 1–2 minutos.
+
+Como GitHub Pages no corre código de servidor, la página escribe directo en el repositorio con la API de GitHub.
+
+**Crear un usuario (una vez):** en `subir.html` → «Configurar acceso». Hace falta un *fine-grained token* de GitHub
+(solo el repo `landinghutchison`, permiso **Contents: Read and write**). El token se guarda cifrado con la contraseña
+en `admin/acceso.json`; sin la contraseña no se puede leer, así que usa una larga. Para cambiar la contraseña o
+renovar el token vencido, vuelve a configurar el mismo usuario. Para quitar un usuario, borra su bloque en `admin/acceso.json`.
+
+Si trabajas en localhost, después de publicar desde el panel haz `git pull` para traer los cambios a tu copia.
 
 ## Qué se puede cambiar desde el XML
 

@@ -1,0 +1,44 @@
+/* =====================================================================
+   Hutchison Ports México — estilos de subir.html (usa también editor.css)
+   ===================================================================== */
+[hidden] { display: none !important; }
+code { font-size: 13px; background: var(--fondo); padding: 1px 6px; border-radius: 6px; }
+
+/* ---------- Entrar / configurar ---------- */
+.tarjeta-acceso { max-width: 420px; margin: 56px auto; padding: 28px; background: var(--blanco); border: 1px solid var(--linea); border-radius: 16px; box-shadow: var(--sombra); }
+.tarjeta-acceso.ancha { max-width: 720px; }
+.tarjeta-acceso h1 { font-size: 24px; font-weight: 800; }
+.tarjeta-acceso > .ayuda { margin: 6px 0 18px; font-size: 14px; }
+.pila { display: flex; flex-direction: column; gap: 14px; }
+.pie-acceso { margin: 18px 0 0; text-align: center; font-size: 13px; }
+.pie-acceso a, .pasos a { color: var(--acento); }
+.pasos { margin: 0 0 20px; padding-left: 20px; font-size: 14px; }
+.pasos li { padding: 3px 0; }
+.aviso { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+.aviso.error { background: var(--rojo-fondo); color: var(--rojo); }
+.aviso.ok { background: #e7f5ed; color: var(--verde); }
+.fila-botones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+/* ---------- Panel ---------- */
+.marco-subir { max-width: 1000px; margin: 0 auto; padding: 24px 20px; }
+.marco-subir .intro a, .seccion-cab a { color: var(--acento); }
+.campo-carpeta { max-width: 360px; }
+
+.fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.foto { position: relative; border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; background: var(--blanco); }
+.foto.nueva { border-color: var(--acento); box-shadow: 0 0 0 3px rgba(21, 146, 211, .12); }
+.foto-img { aspect-ratio: 16 / 9; background: var(--fondo) center / cover no-repeat; }
+.foto-num { position: absolute; top: 8px; left: 8px; min-width: 26px; height: 26px; padding: 0 7px; display: grid; place-items: center; border-radius: 999px; background: var(--azul); color: #fff; font-size: 13px; font-weight: 800; }
+.foto-etiqueta { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: var(--acento); color: #fff; font-size: 11.5px; font-weight: 700; }
+.foto-info { padding: 8px 10px 0; font-size: 12px; color: var(--suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.foto-controles { display: flex; gap: 4px; padding: 8px 10px 10px; }
+.foto-controles .espacio { flex: 1; }
+.fotos-vacio { grid-column: 1 / -1; padding: 28px; text-align: center; border: 2px dashed var(--linea); border-radius: var(--radio); color: var(--suave); }
+
+.ocupado { pointer-events: none; opacity: .6; }
+
+@media (max-width: 700px) {
+  .tarjeta-acceso { margin: 20px 16px; padding: 20px; }
+  .marco-subir { padding: 16px; }
+  .fotos { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}

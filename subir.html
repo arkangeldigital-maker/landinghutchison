@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subir contenido · Hutchison Ports México</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/subir.css">
+</head>
+<body class="subir">
+
+  <!-- Panel para subir contenido.xml y fotos al sitio con usuario y contraseña.
+       El sitio es estático (GitHub Pages): los archivos se guardan como un commit en el repositorio
+       por medio de la API de GitHub, y el sitio se vuelve a publicar solo. Ver LEEME.md. -->
+  <header class="barra">
+    <div class="barra-marca">
+      <svg class="simbolo" viewBox="0 0 37.7 49.6" aria-hidden="true"><polygon points="0,0 37.7,0 37.7,6.5 0,28.6" fill="#1592d3"/><polygon points="0,38.6 37.7,16.6 37.7,49.6 0,49.6" fill="#fff"/></svg>
+      <div>
+        <strong>Subir contenido</strong>
+        <span class="barra-origen" id="quien">Hutchison Ports México</span>
+      </div>
+    </div>
+    <div class="barra-acciones">
+      <a class="btn" href="editor.html" target="_blank" rel="noopener">Editor del XML ↗</a>
+      <a class="btn" href="index.html" target="_blank" rel="noopener">Ver sitio ↗</a>
+      <button type="button" class="btn" id="salir" hidden>Salir</button>
+    </div>
+  </header>
+
+  <!-- Entrar -->
+  <section class="tarjeta-acceso" id="vista-entrar" hidden>
+    <h1>Entrar</h1>
+    <p class="ayuda">Usa el usuario y la contraseña que te dieron para actualizar el sitio.</p>
+    <form id="form-entrar" class="pila">
+      <div class="campo"><label for="e-usuario">Usuario</label><input id="e-usuario" autocomplete="username" required></div>
+      <div class="campo"><label for="e-clave">Contraseña</label><input id="e-clave" type="password" autocomplete="current-password" required></div>
+      <p class="aviso error" id="e-error" hidden></p>
+      <button class="btn primario grande" type="submit" id="e-boton">Entrar</button>
+    </form>
+    <p class="pie-acceso"><a href="#configurar" id="ir-configurar">Configurar acceso (administrador)</a></p>
+  </section>
+
+  <!-- Configurar acceso: crea o cambia un usuario. Solo lo hace quien tiene el token de GitHub. -->
+  <section class="tarjeta-acceso ancha" id="vista-configurar" hidden>
+    <h1>Configurar acceso</h1>
+    <p class="ayuda">Esto se hace una sola vez por usuario. El token de GitHub se guarda <b>cifrado con la contraseña</b>
+      en <code>admin/acceso.json</code>: sin la contraseña no se puede leer. Usa una contraseña larga (12+ caracteres).</p>
+    <ol class="pasos">
+      <li>Entra a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained token nuevo</a> con la cuenta dueña del repositorio.</li>
+      <li><b>Repository access:</b> «Only select repositories» → <code id="c-repo-nombre">landinghutchison</code>.</li>
+      <li><b>Permissions → Repository permissions → Contents:</b> «Read and write». Nada más.</li>
+      <li>Elige la vigencia más larga que te deje, genera el token y pégalo abajo.</li>
+    </ol>
+    <form id="form-configurar" class="pila">
+      <div class="rejilla">
+        <div class="campo"><label for="c-usuario">Usuario nuevo</label><input id="c-usuario" autocomplete="off" required></div>
+        <div class="campo"><label for="c-clave">Contraseña</label><input id="c-clave" type="password" autocomplete="new-password" minlength="10" required></div>
+        <div class="campo"><label for="c-clave2">Repite la contraseña</label><input id="c-clave2" type="password" autocomplete="new-password" required></div>
+      </div>
+      <div class="campo"><label for="c-token">Token de GitHub</label><input id="c-token" type="password" autocomplete="off" placeholder="github_pat_…" required></div>
+      <p class="ayuda">Si el usuario ya existe, se reemplaza (sirve para cambiar la contraseña o renovar el token).</p>
+      <p class="aviso error" id="c-error" hidden></p>
+      <p class="aviso ok" id="c-ok" hidden></p>
+      <div class="fila-botones">
+        <button class="btn primario grande" type="submit" id="c-boton">Guardar acceso</button>
+        <a class="btn" href="#" id="volver-entrar">Volver a entrar</a>
+      </div>
+    </form>
+  </section>
+
+  <!-- Panel -->
+  <div class="marco-subir" id="vista-panel" hidden>
+    <div class="intro">
+      <p><b>Cómo funciona:</b> prepara los cambios (XML y fotos) y pulsa <b>Publicar cambios</b>. Todo se guarda junto
+        y el sitio se actualiza solo en 1 o 2 minutos. Las fotos se reducen y se guardan como <b>.jpg</b>
+        (portada hasta 1920 px de ancho, empresas hasta 1280 px) y se numeran 1, 2, 3… en el orden que ves.</p>
+    </div>
+
+    <section class="seccion" id="sec-xml">
+      <div class="seccion-cab">
+        <h2>Contenido (contenido.xml)</h2>
+        <p>Textos, empresas y datos de contacto. Genera el archivo con el <a href="editor.html" target="_blank" rel="noopener">editor</a> y súbelo aquí.</p>
+      </div>
+      <div class="seccion-cuerpo">
+        <div class="fila-botones">
+          <label class="btn">Elegir contenido.xml<input type="file" id="xml-archivo" accept=".xml,application/xml,text/xml" hidden></label>
+          <button type="button" class="btn peligro chico" id="xml-quitar" hidden>Quitar</button>
+        </div>
+        <p class="ayuda" id="xml-estado">Sin cambios.</p>
+      </div>
+    </section>
+
+    <section class="seccion" id="sec-fotos">
+      <div class="seccion-cab">
+        <h2>Fotos</h2>
+        <p>Elige la carpeta: la portada o una empresa. Puedes agregar, reemplazar, quitar y cambiar el orden.</p>
+      </div>
+      <div class="seccion-cuerpo">
+        <div class="campo campo-carpeta">
+          <label for="carpeta">Carpeta</label>
+          <select id="carpeta"></select>
+        </div>
+        <div class="fotos" id="fotos"></div>
+        <div class="fila-botones">
+          <label class="btn primario">+ Agregar fotos<input type="file" id="fotos-agregar" accept="image/*" multiple hidden></label>
+          <button type="button" class="btn chico" id="fotos-deshacer" hidden>Deshacer cambios de esta carpeta</button>
+        </div>
+        <p class="ayuda" id="fotos-nota"></p>
+      </div>
+    </section>
+  </div>
+
+  <footer class="pie-fijo" id="pie-panel" hidden>
+    <div class="estado" id="resumen">Sin cambios por publicar.</div>
+    <button type="button" class="btn primario grande" id="publicar" disabled>Publicar cambios</button>
+  </footer>
+
+  <input type="file" id="reemplazar" accept="image/*" hidden>
+  <div class="mensaje" id="mensaje" role="status" hidden></div>
+
+  <script src="js/subir.js"></script>
+</body>
+</html>
