@@ -37,7 +37,7 @@
   var xmlNuevo = null;    // { texto, nombre, empresas } listo para subir
   var docsNuevos = {};    // nombre → { archivo, id } documentos por subir a docs/
   var docsBorrar = {};    // nombre → true documentos por quitar de docs/
-  var EXT_DOCS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'jpg', 'jpeg', 'png', 'webp', 'txt', 'csv'];
+  var EXT_DOCS = ['pdf']; // solo PDF
   var MAX_DOC = 60 * 1048576;
   var PARTE_DOC = 900 * 1024; // en PHP los documentos viajan en partes (nginx acepta 1 MB por petición)
   var carpetas = {};      // carpeta → { originales: [...], items: [...] }
@@ -647,7 +647,7 @@
     if (!conArchivos(ev)) return;
     ev.preventDefault();
     if (arrastres++ === 0) {
-      $('soltar').textContent = 'Suelta aquí: las fotos van a ' + nombreCarpeta(carpetaActual()) + ', los PDF y documentos a docs/';
+      $('soltar').textContent = 'Suelta aquí: las fotos van a ' + nombreCarpeta(carpetaActual()) + ' y los PDF a docs/';
       document.body.classList.add('arrastrando');
     }
   });
@@ -691,15 +691,25 @@
 
   function agregarDocs(archivos) {
     var malos = [];
+    var buenos = [];
     archivos.forEach(function (a) {
       var nombre = limpiarNombreDoc(a.name);
-      if (!nombre || EXT_DOCS.indexOf(extension(nombre)) < 0) return malos.push('«' + a.name + '» no es un tipo de documento permitido (' + EXT_DOCS.join(', ') + ').');
+      if (!nombre || EXT_DOCS.indexOf(extension(nombre)) < 0) return malos.push('«' + a.name + '» no es PDF: en docs/ solo se aceptan PDF.');
       if (a.size > MAX_DOC) return malos.push('«' + a.name + '» pesa más de 60 MB.');
-      docsNuevos[nombre] = { archivo: a };
-      delete docsBorrar[nombre];
+      buenos.push({ nombre: nombre, archivo: a });
     });
-    if (malos.length) avisar(malos.join(' '), true, 8000);
-    if (archivos.length) pintarDocs();
+    // Revisa que de verdad sea PDF (empieza con %PDF), no solo que se llame .pdf.
+    Promise.all(buenos.map(function (b) {
+      return b.archivo.slice(0, 5).text().then(function (t) { return t.indexOf('%PDF') === 0; }).catch(function () { return false; });
+    })).then(function (ok) {
+      buenos.forEach(function (b, i) {
+        if (!ok[i]) return malos.push('«' + b.archivo.name + '» no es un PDF válido.');
+        docsNuevos[b.nombre] = { archivo: b.archivo };
+        delete docsBorrar[b.nombre];
+      });
+      if (malos.length) avisar(malos.join(' '), true, 8000);
+      if (archivos.length) pintarDocs();
+    });
   }
 
   function pintarDocs() {
@@ -710,7 +720,7 @@
     base.docs.forEach(function (d) { actuales[d.nombre] = d; });
     var nombres = Object.keys(actuales).concat(Object.keys(docsNuevos).filter(function (n) { return !actuales[n]; }))
       .sort(function (a, b) { return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' }); });
-    if (!nombres.length) cont.appendChild(h('p', { class: 'vacio', text: 'No hay documentos. Agrégalos con el botón o arrastrándolos a la página.' }));
+    if (!nombres.length) cont.appendChild(h('p', { class: 'vacio', text: 'No hay PDF. Agrégalos con el botón o arrastrándolos a la página.' }));
     nombres.forEach(function (n) {
       var actual = actuales[n];
       var nuevo = docsNuevos[n];
@@ -721,10 +731,12 @@
         h('span', { class: 'doc-ext', text: extension(n).toUpperCase() }),
         h('div', { class: 'doc-info' }, [
           actual && !nuevo && !borrar ? h('a', { href: actual.url + '?v=' + actual.tamano, target: '_blank', rel: 'noopener', text: n }) : h('span', { class: 'doc-nombre', text: n }),
-          h('span', { class: 'doc-det', text: peso(nuevo ? nuevo.archivo.size : actual.tamano) + ' · docs/' + n }),
+          h('span', { class: 'doc-det' }, [
+            peso(nuevo ? nuevo.archivo.size : actual.tamano),
+            estado ? h('span', { class: 'insignia ' + (borrar ? 'roja' : 'azul'), text: estado }) : null,
+            uso ? h('span', { class: 'insignia gris', title: 'contenido.xml tiene un link a este archivo', text: 'En uso' }) : null
+          ])
         ]),
-        estado ? h('span', { class: 'insignia ' + (borrar ? 'roja' : 'azul'), text: estado }) : null,
-        uso ? h('span', { class: 'insignia gris', title: 'contenido.xml tiene un link a este archivo', text: 'En uso' }) : null,
         borrar
           ? h('button', { type: 'button', class: 'btn mini', text: 'Deshacer', onclick: function () { delete docsBorrar[n]; pintarDocs(); } })
           : h('button', { type: 'button', class: 'btn-icono basura', title: nuevo ? 'No subir' : 'Quitar documento', 'aria-label': 'Quitar ' + n, html: ICONO_BASURA, onclick: function () {

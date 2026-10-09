@@ -6,7 +6,7 @@
    · Usuarios: admin/usuarios.php (se crea solo desde subir.html; contraseñas con password_hash).
      Es un .php para que el servidor nunca lo muestre como texto.
    · Fotos nuevas: se suben una por una a admin/tmp/ y se colocan al publicar.
-   · Documentos: docs/ (PDF, Office…). Llegan en partes de menos de 1 MB (límite por defecto de nginx)
+   · Documentos: docs/ (solo PDF). Llegan en partes de menos de 1 MB (límite por defecto de nginx)
      y docs/lista.json se regenera para que editor.html ofrezca la lista.
    · Respaldo: cada contenido.xml reemplazado se guarda en admin/respaldos/ (los últimos 30).
    ===================================================================== */
@@ -22,7 +22,7 @@ const MAX_FOTOS = 30;          // el sitio no busca más de 30 por carpeta
 const MAX_FOTO = 8 * 1048576;  // bytes por foto
 const MAX_RESPALDOS = 30;
 const DOCS = 'docs';
-const EXT_DOCS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'jpg', 'jpeg', 'png', 'webp', 'txt', 'csv'];
+const EXT_DOCS = ['pdf']; // en docs/ solo PDF
 const MAX_DOC = 60 * 1048576;  // bytes por documento
 
 header('Content-Type: application/json; charset=utf-8');
@@ -298,6 +298,7 @@ switch ($accion) {
     foreach ((array)($d['docs']['subir'] ?? []) as $doc) {
       $id = (string)($doc['id'] ?? '');
       if (!preg_match('/^[a-f0-9]{24}$/', $id) || !is_file(TMP . '/' . $id . '.doc')) fallar('Un documento nuevo ya no está en el servidor. Vuelve a agregarlo.');
+      if (file_get_contents(TMP . '/' . $id . '.doc', false, null, 0, 5) !== '%PDF-') fallar('«' . ($doc['nombre'] ?? '') . '» no es un PDF válido.');
       $docsSubir[] = ['origen' => TMP . '/' . $id . '.doc', 'nombre' => nombreDoc((string)($doc['nombre'] ?? ''))];
     }
     $docsBorrar = array_map(fn($n) => nombreDoc((string)$n), (array)($d['docs']['borrar'] ?? []));

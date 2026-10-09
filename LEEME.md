@@ -63,7 +63,7 @@ Abre **`/subir.html`** en el sitio. Con usuario y contraseña permite:
 - Subir un **contenido.xml** nuevo (revisa que esté bien escrito antes de aceptarlo; el anterior se respalda).
 - Manejar las fotos de **`img/portada/`** y de **`img/<id>/`** de cada empresa: agregar (con el botón o arrastrándolas a la página), reemplazar, quitar (bote de basura) y cambiar el orden.
   Las fotos se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` de menos de 1 MB y se renumeran `1, 2, 3…` solas.
-- Subir y quitar **documentos en `docs/`** (PDF, Word, Excel, PowerPoint, ZIP; hasta 60 MB). Los nombres se limpian
+- Subir y quitar **documentos en `docs/`** (solo PDF, hasta 60 MB; se ven en una lista para abrirlos o quitarlos). Los nombres se limpian
   (sin acentos ni espacios) y se marca «En uso» si `contenido.xml` tiene un link a ese archivo.
   `docs/lista.json` se actualiza solo: de ahí `editor.html` saca la lista para el campo de link de Brochure, Expansión
   y los links del pie (se elige de la lista o se pega un link externo).
