@@ -1,9 +1,12 @@
 /* =====================================================================
    Hutchison Ports México — subir.html
-   Sube contenido.xml y las fotos (img/portada/, img/<id>/) al repositorio de GitHub
-   con usuario y contraseña. GitHub Pages vuelve a publicar el sitio después de cada commit.
+   Sube contenido.xml y las fotos (img/portada/, img/<id>/) con usuario y contraseña.
 
-   Cómo funciona el acceso:
+   Dos modos, se elige solo al abrir la página:
+   · PHP (Azure con nginx + PHP): si responde admin/api.php, todo se guarda directo en el servidor.
+   · GitHub Pages (sin PHP): los cambios se guardan como commit en el repositorio con la API de GitHub.
+
+   Acceso en modo GitHub:
    · admin/acceso.json guarda, por usuario, un token de GitHub cifrado (AES-GCM) con una clave
      que sale de la contraseña (PBKDF2). Sin la contraseña el token no se puede leer.
    · Al entrar se descifra el token y queda solo en esta pestaña (sessionStorage).
@@ -24,6 +27,10 @@
   var SESION = 'subir-sesion';
 
   var $ = function (id) { return document.getElementById(id); };
+  var API_PHP = 'admin/api.php';
+  var MAX_BYTES_FOTO = 900 * 1024; // nginx acepta 1 MB por petición si no se configura otra cosa
+  var modo = 'github';    // 'php' o 'github'
+  var csrf = '';          // token de la sesión PHP
   var sesion = null;      // { usuario, token }
   var base = null;        // { commit, rutas: { ruta: sha } }
   var xmlActual = null;   // texto de contenido.xml en el repositorio
@@ -145,7 +152,25 @@
     });
   }
 
+  // Llamada a admin/api.php (modo PHP).
+  function api(accion, datos, formulario) {
+    var opciones = { method: datos || formulario ? 'POST' : 'GET', credentials: 'same-origin', cache: 'no-store', headers: { 'X-CSRF': csrf } };
+    if (formulario) opciones.body = formulario;
+    else if (datos) { opciones.body = JSON.stringify(datos); opciones.headers['Content-Type'] = 'application/json'; }
+    return fetch(API_PHP + '?accion=' + accion, opciones).then(function (r) {
+      return r.json().catch(function () {
+        var e = new Error(r.status === 413 ? 'El servidor rechazó el archivo por pesado (client_max_body_size de nginx).' : 'El servidor respondió ' + r.status + '.');
+        e.status = r.status;
+        throw e;
+      }).then(function (j) {
+        if (!r.ok || j.error) { var e = new Error(j.error || 'Error ' + r.status); e.status = r.status; e.php = true; throw e; }
+        return j;
+      });
+    });
+  }
+
   function explicarError(e) {
+    if (e.php || modo === 'php') return e.message || 'Error desconocido';
     if (e.status === 401) return 'El token de GitHub ya no es válido (venció o se revocó). Un administrador debe renovarlo en «Configurar acceso».';
     if (e.status === 403 || e.status === 404) return 'El token no tiene permiso de escritura en el repositorio (Contents: Read and write).';
     if (e.status === 409 || e.status === 422) return 'Alguien más publicó cambios al mismo tiempo. Intenta de nuevo.';
@@ -158,12 +183,38 @@
     ['entrar', 'configurar', 'panel'].forEach(function (v) { $('vista-' + v).hidden = v !== nombre; });
     $('pie-panel').hidden = nombre !== 'panel';
     $('salir').hidden = nombre !== 'panel';
-    $('quien').textContent = nombre === 'panel' ? 'Sesión: ' + sesion.usuario : 'Hutchison Ports México';
+    $('usuarios').hidden = !(modo === 'php' && nombre === 'panel');
+    $('quien').textContent = sesion && sesion.usuario ? 'Sesión: ' + sesion.usuario : 'Hutchison Ports México';
+    if (nombre === 'configurar') prepararConfigurar();
     var foco = { entrar: 'e-usuario', configurar: 'c-usuario' }[nombre];
     if (foco) setTimeout(function () { $(foco).focus(); }, 0);
   }
 
   function iniciar() {
+    // ¿Hay PHP? Si admin/api.php responde JSON se usa el servidor; si no (GitHub Pages), GitHub.
+    fetch(API_PHP + '?accion=estado', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (estado) {
+        if (estado && estado.modo === 'php') return iniciarPhp(estado);
+        iniciarGithub();
+      });
+  }
+
+  function iniciarPhp(estado) {
+    modo = 'php';
+    csrf = estado.csrf;
+    document.body.classList.add('modo-php');
+    if (estado.sinPermiso && estado.sinPermiso.length) {
+      avisar('El servidor no puede escribir en: ' + estado.sinPermiso.join(', ') + '. Revisa los permisos (ver LEEME.md).', true, 0);
+    }
+    if (estado.usuario) { sesion = { usuario: estado.usuario }; return abrirPanel(); }
+    if (estado.hayUsuarios) return vista('entrar');
+    vista('configurar');
+    mostrarError('c-error', 'Todavía no hay usuarios. Crea el primero.');
+  }
+
+  function iniciarGithub() {
     try { sesion = JSON.parse(sessionStorage.getItem(SESION)); } catch (e) { sesion = null; }
     if (sesion && sesion.token) return abrirPanel();
     if (location.hash === '#configurar') return vista('configurar');
@@ -184,6 +235,17 @@
     mostrarError('e-error', '');
     boton.disabled = true;
     boton.textContent = 'Revisando…';
+    if (modo === 'php') {
+      api('entrar', { usuario: usuario, clave: clave }).then(function (r) {
+        sesion = { usuario: r.usuario };
+        $('e-clave').value = '';
+        return api('estado').then(function (e) { csrf = e.csrf; abrirPanel(); });
+      }).catch(function (e) { mostrarError('e-error', e.message); }).then(function () {
+        boton.disabled = false;
+        boton.textContent = 'Entrar';
+      });
+      return;
+    }
     leerAcceso().then(function (a) {
       var entrada = a && a.usuarios.filter(function (u) { return u.usuario === usuario; })[0];
       if (!entrada) throw new Error('mal');
@@ -207,12 +269,31 @@
     if (hayCambios() && !confirm('Tienes cambios sin publicar. ¿Salir de todos modos?')) return;
     try { sessionStorage.removeItem(SESION); } catch (e) { /* nada */ }
     sesion = null;
-    location.hash = '';
-    location.reload();
+    (modo === 'php' ? api('salir', {}).catch(function () {}) : Promise.resolve()).then(function () {
+      location.hash = '';
+      location.reload();
+    });
   });
 
+  $('usuarios').addEventListener('click', function () { vista('configurar'); });
+
   $('ir-configurar').addEventListener('click', function (ev) { ev.preventDefault(); location.hash = 'configurar'; vista('configurar'); });
-  $('volver-entrar').addEventListener('click', function (ev) { ev.preventDefault(); location.hash = ''; vista('entrar'); });
+  $('volver-entrar').addEventListener('click', function (ev) {
+    ev.preventDefault();
+    location.hash = '';
+    if (modo === 'php' && sesion) vista('panel');
+    else vista('entrar');
+  });
+
+  // En modo PHP no hace falta token de GitHub: solo usuario y contraseña.
+  function prepararConfigurar() {
+    var php = modo === 'php';
+    $('c-titulo').textContent = php ? (sesion ? 'Agregar o cambiar usuario' : 'Crear el primer usuario') : 'Configurar acceso';
+    $('c-solo-github').hidden = php;
+    $('c-campo-token').hidden = php;
+    $('c-token').required = !php;
+    $('volver-entrar').textContent = php && sesion ? 'Volver al panel' : 'Volver a entrar';
+  }
 
   /* ---------- Configurar acceso ---------- */
 
@@ -232,6 +313,18 @@
 
     boton.disabled = true;
     boton.textContent = 'Guardando…';
+    if (modo === 'php') {
+      api('usuario', { usuario: usuario, clave: clave }).then(function () {
+        $('form-configurar').reset();
+        mostrarError('c-ok', 'Listo: el usuario «' + usuario + '» ya puede entrar.');
+        $('e-usuario').value = usuario;
+        if (!sesion) setTimeout(function () { vista('entrar'); }, 1200);
+      }).catch(function (e) { mostrarError('c-error', e.message); }).then(function () {
+        boton.disabled = false;
+        boton.textContent = 'Guardar acceso';
+      });
+      return;
+    }
     var existente = null;
     gh('', {}, token).catch(function (e) {
       if (e.status === 401) throw new Error('GitHub no reconoce ese token.');
@@ -275,6 +368,12 @@
   /* ---------- Panel: estado del repositorio ---------- */
 
   function cargarRepositorio() {
+    if (modo === 'php') {
+      return api('archivos').then(function (r) {
+        base = { rutas: r.rutas };
+        xmlActual = r.xml;
+      });
+    }
     return gh('/git/ref/heads/' + RAMA).then(function (ref) {
       var commit = ref.object.sha;
       return Promise.all([
@@ -417,6 +516,7 @@
 
   function miniatura(it, div) {
     if (it.tipo === 'nueva') { div.style.backgroundImage = 'url("' + it.url + '")'; return; }
+    if (modo === 'php') { div.style.backgroundImage = 'url("' + it.ruta + '?v=' + encodeURIComponent(it.sha) + '")'; return; }
     if (miniaturas[it.sha]) { div.style.backgroundImage = 'url("' + miniaturas[it.sha] + '")'; return; }
     gh('/git/blobs/' + it.sha, { crudo: 'blob' }).then(function (b) {
       miniaturas[it.sha] = URL.createObjectURL(b);
@@ -485,7 +585,13 @@
       ctx.fillRect(0, 0, lienzo.width, lienzo.height);
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(bmp, 0, 0, lienzo.width, lienzo.height);
-      return new Promise(function (ok) { lienzo.toBlob(ok, 'image/jpeg', CALIDAD_JPG); }).then(function (blob) {
+      // Baja la calidad si hace falta para que cada foto pese menos de MAX_BYTES_FOTO.
+      function jpg(calidad) {
+        return new Promise(function (ok) { lienzo.toBlob(ok, 'image/jpeg', calidad); }).then(function (b) {
+          return b.size > MAX_BYTES_FOTO && calidad > 0.5 ? jpg(calidad - 0.08) : b;
+        });
+      }
+      return jpg(CALIDAD_JPG).then(function (blob) {
         return { tipo: 'nueva', blob: blob, url: URL.createObjectURL(blob), nombre: archivo.name, ancho: lienzo.width, alto: lienzo.height };
       });
     });
@@ -558,7 +664,7 @@
     boton.disabled = true;
     document.body.classList.add('ocupado');
 
-    // 1) Sube los archivos nuevos como blobs.
+    // 1) Sube las fotos nuevas una por una (en PHP a admin/tmp/, en GitHub como blobs).
     var nuevas = [];
     cambiosDeCarpetas().forEach(function (c) {
       carpetas[c].items.forEach(function (it) { if (it.tipo === 'nueva' && !it.sha) nuevas.push(it); });
@@ -567,6 +673,11 @@
     var subir = nuevas.reduce(function (p, it) {
       return p.then(function () {
         avisar('Subiendo fotos ' + (++hechas) + ' de ' + nuevas.length + '…', false, 0);
+        if (modo === 'php') {
+          var fd = new FormData();
+          fd.append('foto', it.blob, 'foto.jpg');
+          return api('foto', null, fd).then(function (r) { it.sha = r.id; });
+        }
         return blobABase64(it.blob).then(function (b64) {
           return gh('/git/blobs', { method: 'POST', body: { content: b64, encoding: 'base64' } });
         }).then(function (r) { it.sha = r.sha; });
@@ -575,10 +686,20 @@
 
     var shaXml = null;
     subir.then(function () {
-      if (!xmlNuevo) return;
+      if (modo !== 'php') return;
+      // 2) PHP: el servidor coloca todo en el orden de la lista.
+      avisar('Publicando…', false, 0);
+      var plan = {};
+      cambiosDeCarpetas().forEach(function (c) {
+        plan[c] = carpetas[c].items.map(function (it) { return it.tipo === 'nueva' ? { nueva: it.sha } : { existente: it.ruta }; });
+      });
+      return api('publicar', { xml: xmlNuevo ? xmlNuevo.texto : undefined, carpetas: plan });
+    }).then(function () {
+      if (modo === 'php' || !xmlNuevo) return;
       avisar('Subiendo contenido.xml…', false, 0);
       return gh('/git/blobs', { method: 'POST', body: { content: xmlNuevo.texto, encoding: 'utf-8' } }).then(function (r) { shaXml = r.sha; });
     }).then(function () {
+      if (modo === 'php') return;
       // 2) Arma el árbol: rutas nuevas o movidas, y borra las que ya no van.
       var arbol = [];
       if (shaXml) arbol.push({ path: 'contenido.xml', mode: '100644', type: 'blob', sha: shaXml });
@@ -619,7 +740,7 @@
         xmlNuevo = null;
         pintarXml();
         pintarCarpetas();
-        avisar('Publicado. El sitio se actualiza en 1 o 2 minutos.', false, 8000);
+        avisar(modo === 'php' ? 'Publicado. Ya está en el sitio.' : 'Publicado. El sitio se actualiza en 1 o 2 minutos.', false, 8000);
       });
     }).catch(function (e) {
       avisar('No se pudo publicar: ' + explicarError(e), true, 0);

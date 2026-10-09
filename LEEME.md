@@ -9,7 +9,7 @@ sitio/
 ├── contenido.xml     ← EDITA ESTE ARCHIVO (a mano o con editor.html)
 ├── editor.html       ← formulario para editar contenido.xml sin tocar el código
 ├── subir.html        ← panel con usuario y contraseña para subir el XML y las fotos
-├── admin/acceso.json ← usuarios del panel (token de GitHub cifrado con su contraseña)
+├── admin/api.php     ← lo que usa subir.html en un servidor con PHP (Azure)
 ├── css/estilos.css
 ├── js/sitio.js       ← lee el XML, arma la página y los efectos
 ├── img/              ← logos, íconos y carpetas de fotos:
@@ -58,21 +58,45 @@ no subas `editor.html`, `js/editor.js` ni `css/editor.css` (el sitio funciona si
 
 ## Subir cambios con usuario y contraseña (subir.html)
 
-Abre **`subir.html`** en el sitio publicado (o en http://localhost:5190/subir.html). Con usuario y contraseña permite:
+Abre **`/subir.html`** en el sitio. Con usuario y contraseña permite:
 
-- Subir un **contenido.xml** nuevo (revisa que esté bien escrito antes de aceptarlo).
+- Subir un **contenido.xml** nuevo (revisa que esté bien escrito antes de aceptarlo; el anterior se respalda).
 - Manejar las fotos de **`img/portada/`** y de **`img/<id>/`** de cada empresa: agregar, reemplazar, quitar y cambiar el orden.
-  Las fotos se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` y se renumeran `1, 2, 3…` solas.
-- **Publicar cambios** guarda todo en un solo commit en GitHub; el workflow de Pages vuelve a publicar el sitio en 1–2 minutos.
+  Las fotos se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` de menos de 1 MB y se renumeran `1, 2, 3…` solas.
+- **Publicar cambios** aplica todo junto.
 
-Como GitHub Pages no corre código de servidor, la página escribe directo en el repositorio con la API de GitHub.
+La página detecta sola dónde está:
 
-**Crear un usuario (una vez):** en `subir.html` → «Configurar acceso». Hace falta un *fine-grained token* de GitHub
-(solo el repo `landinghutchison`, permiso **Contents: Read and write**). El token se guarda cifrado con la contraseña
-en `admin/acceso.json`; sin la contraseña no se puede leer, así que usa una larga. Para cambiar la contraseña o
-renovar el token vencido, vuelve a configurar el mismo usuario. Para quitar un usuario, borra su bloque en `admin/acceso.json`.
+### En el servidor de Azure (nginx + PHP) — modo principal
 
-Si trabajas en localhost, después de publicar desde el panel haz `git pull` para traer los cambios a tu copia.
+Solo sube la carpeta completa. `subir.html` usa `admin/api.php` y guarda directo en el servidor.
+
+1. **Permisos:** el usuario de PHP-FPM (normalmente `www-data`) debe poder escribir en la raíz del sitio
+   (por `contenido.xml`), en `img/` y en `admin/`. Por ejemplo, si el sitio está en `/var/www/sitio`:
+   ```bash
+   sudo chown -R www-data:www-data /var/www/sitio/img /var/www/sitio/admin /var/www/sitio/contenido.xml
+   sudo chown www-data /var/www/sitio && sudo chmod 775 /var/www/sitio
+   ```
+   Si falta un permiso, `subir.html` lo avisa en rojo al abrir.
+2. **Primer usuario:** abre `subir.html`; como no hay usuarios, pide crear el primero. Después, para agregar
+   o cambiar contraseñas hay que entrar y usar el botón **Usuarios**.
+3. Los usuarios quedan en `admin/usuarios.php` (contraseñas con `password_hash`; al ser `.php`, el servidor nunca
+   lo muestra). Para borrar un usuario, quita su línea de ese archivo. **No lo subas al repositorio** (ya está en `.gitignore`).
+4. Cada `contenido.xml` reemplazado se guarda en `admin/respaldos/` (los últimos 30), por si hay que regresar.
+
+No hace falta tocar la configuración de nginx: cada foto viaja en su propia petición de menos de 1 MB
+(el límite por defecto de `client_max_body_size`). Si el Application Gateway tiene WAF y bloquea las subidas,
+hay que permitir `POST /admin/api.php` en sus reglas.
+
+Al volver a subir el sitio completo, **no sobrescribas** `contenido.xml` ni las carpetas de `img/` del servidor
+si se cambiaron desde el panel (esa es ahora la versión buena).
+
+### En GitHub Pages (sin PHP)
+
+Ahí `admin/api.php` no corre, así que la página guarda los cambios como un commit en el repositorio con la API de
+GitHub, y el workflow de Pages republica en 1–2 minutos. El acceso se crea en «Configurar acceso» con un
+*fine-grained token* (solo el repo `landinghutchison`, permiso **Contents: Read and write**), que se guarda cifrado
+con la contraseña en `admin/acceso.json`.
 
 ## Qué se puede cambiar desde el XML
 
@@ -113,8 +137,7 @@ Si tiene `<logo>img/archivo.png</logo>`, se usa esa imagen (como Container Care)
 - Las fotos de la portada se extrajeron del PDF. Para mejor calidad, reemplázalas por los originales en alta resolución (mismo nombre: `img/portada/1.jpg`, `2.jpg`).
 - Las fotos de `img/icave/` y `img/tilh/` son de ejemplo: reemplázalas por las de cada terminal.
 
-## Publicar en Azure App Service
+## Publicar en Azure (nginx + PHP)
 
-Sube la carpeta completa a `wwwroot`. App Service sirve `.xml` sin configuración extra.
-Para que el cliente actualice el XML desde un link con usuario y contraseña, ver la recomendación de
-usar Blob Storage y el panel `/admin` (proyecto `sitio-xml`).
+Sube la carpeta completa al directorio del sitio y da los permisos de escritura descritos arriba en
+«En el servidor de Azure». nginx sirve `.xml` sin configuración extra.

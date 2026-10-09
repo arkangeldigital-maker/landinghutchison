@@ -2,6 +2,8 @@
    Hutchison Ports México — estilos de subir.html (usa también editor.css)
    ===================================================================== */
 [hidden] { display: none !important; }
+body:not(.modo-php) .solo-php, .modo-php .solo-github { display: none; }
+#c-solo-github .ayuda { margin: 6px 0 18px; font-size: 14px; }
 code { font-size: 13px; background: var(--fondo); padding: 1px 6px; border-radius: 6px; }
 
 /* ---------- Entrar / configurar ---------- */
