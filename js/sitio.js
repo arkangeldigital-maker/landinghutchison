@@ -310,8 +310,50 @@
     menuMovil(raiz, categorias, burger);
     return h('div', { class: 'contenedor cabecera-in' },
       h('a', { href: '#inicio', class: 'cabecera-logo' }, logotipoPrincipal()),
-      nav, burger);
+      nav,
+      h('div', { class: 'cabecera-acciones' }, botonTema(), burger));
   }
+
+  /* Botón de modo nocturno. index.html ya puso data-tema antes de pintar;
+     aquí solo se cambia y se recuerda en este navegador (localStorage). */
+  function botonTema() {
+    var raizHtml = document.documentElement;
+    var boton = h('button', { class: 'tema-boton', type: 'button', html:
+      '<svg class="tema-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>' +
+      '<svg class="tema-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>' });
+    function pintar() {
+      var oscuro = raizHtml.getAttribute('data-tema') === 'oscuro';
+      boton.setAttribute('aria-pressed', String(oscuro));
+      boton.setAttribute('aria-label', 'Modo nocturno');
+      boton.title = oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo nocturno';
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', oscuro ? '#0a1424' : '#0b2a5c');
+    }
+    boton.addEventListener('click', function () {
+      var tema = raizHtml.getAttribute('data-tema') === 'oscuro' ? 'claro' : 'oscuro';
+      raizHtml.setAttribute('data-tema', tema);
+      try { localStorage.setItem('tema', tema); } catch (e) {}
+      pintar();
+    });
+    // Si nunca se eligió, sigue los cambios del sistema mientras la página está abierta.
+    if (!escuchaTema && window.matchMedia) {
+      escuchaTema = true; // una sola vez, aunque la cabecera se rehaga al recargar el XML
+      var mq = matchMedia('(prefers-color-scheme: dark)');
+      var seguir = function (e) {
+        var guardado; try { guardado = localStorage.getItem('tema'); } catch (err) {}
+        if (guardado) return;
+        raizHtml.setAttribute('data-tema', e.matches ? 'oscuro' : 'claro');
+        var b = document.querySelector('.tema-boton');
+        if (b) b.dispatchEvent(new CustomEvent('tema'));
+      };
+      if (mq.addEventListener) mq.addEventListener('change', seguir); else if (mq.addListener) mq.addListener(seguir);
+    }
+    boton.addEventListener('tema', pintar);
+    if (!raizHtml.hasAttribute('data-tema')) raizHtml.setAttribute('data-tema', 'claro');
+    pintar();
+    return boton;
+  }
+  var escuchaTema = false;
 
   /* Menú móvil (mismo efecto que Boreal): un círculo azul se expande desde la
      hamburguesa, los links suben uno tras otro y entran las diagonales de la marca. */
