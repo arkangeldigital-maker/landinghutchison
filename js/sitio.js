@@ -104,11 +104,11 @@
   /* Las fotos no se escriben en el XML: se toman de carpetas dentro de img/.
        img/portada/   → carrusel de la portada
        img/<id>/      → slider de cada empresa (el id de <empresa id="icave"> → img/icave/)
-     Los archivos se llaman 1.jpg, 2.jpg, 3.jpg… (también .jpeg, .png o .webp) y salen en ese
+     Los archivos se llaman 1.jpg, 2.jpg, 3.jpg… (también .jpeg; solo JPG) y salen en ese
      orden. El navegador no puede ver qué hay en una carpeta, así que pregunta por 1, 2, 3…
      hasta que falta un número: si borras la 2, la 3 en adelante ya no salen. */
   var CARPETA_PORTADA = 'img/portada';
-  var EXTENSIONES = ['jpg', 'jpeg', 'png', 'webp'];
+  var EXTENSIONES = ['jpg', 'jpeg'];
   var MAX_FOTOS = 30;
   var FOTOS = {}; // carpeta → [rutas], se llena antes de cada render
 

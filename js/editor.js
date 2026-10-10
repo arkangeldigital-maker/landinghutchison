@@ -651,7 +651,7 @@
   function seccionPortada() {
     if (!m.portada) m.portada = { comentarios: [], antetitulo: '', titulo: '', texto: '', redes: [], extra: [] };
     var p = m.portada;
-    var s = seccion('sec-portada', 'Portada', 'Las fotos se toman solas de img/portada/ (1.jpg, 2.jpg…).');
+    var s = seccion('sec-portada', 'Portada', 'Las fotos se toman solas de img/portada/ (1.jpg, 2.jpg…; solo JPG).');
     s.cuerpo.appendChild(h('div', { class: 'rejilla' },
       campo('Antetítulo', p, 'antetitulo', { placeholder: 'Directorio' }),
       campo('Título', p, 'titulo', { requerido: true })));

@@ -20,7 +20,7 @@
   var RAMA = 'main';
   var ACCESO = 'admin/acceso.json';
   var ITERACIONES = 600000;
-  var EXTENSIONES = ['jpg', 'jpeg', 'png', 'webp'];
+  var EXTENSIONES = ['jpg', 'jpeg'];
   var PORTADA = 'img/portada';
   var ANCHO_MAX = { portada: 1920, empresa: 1280 };
   var CALIDAD_JPG = 0.85;
@@ -591,10 +591,22 @@
     pintarFotos();
   });
 
-  // Reduce la foto y la convierte a JPG (fondo blanco si tenía transparencia).
+  // Solo se aceptan fotos JPG/JPEG: por tipo o nombre y, además, por su firma (FF D8 FF).
+  function esJpg(archivo) {
+    if (!/^image\/jpe?g$/i.test(archivo.type) && !/\.jpe?g$/i.test(archivo.name)) return Promise.resolve(false);
+    return archivo.slice(0, 3).arrayBuffer().then(function (b) {
+      var x = new Uint8Array(b);
+      return x[0] === 0xFF && x[1] === 0xD8 && x[2] === 0xFF;
+    }).catch(function () { return false; });
+  }
+
+  // Reduce la foto (solo JPG) y la guarda de nuevo como JPG.
   function prepararFoto(archivo, anchoMax) {
-    return createImageBitmap(archivo).catch(function () {
-      throw new Error('No se pudo leer «' + archivo.name + '». Usa JPG, PNG o WEBP.');
+    return esJpg(archivo).then(function (si) {
+      if (!si) throw new Error('«' + archivo.name + '» no es JPG: solo se aceptan fotos .jpg o .jpeg.');
+      return createImageBitmap(archivo).catch(function () {
+        throw new Error('No se pudo leer «' + archivo.name + '». Revisa que sea un JPG válido.');
+      });
     }).then(function (bmp) {
       var escala = Math.min(1, anchoMax / bmp.width, anchoMax / bmp.height);
       var lienzo = document.createElement('canvas');

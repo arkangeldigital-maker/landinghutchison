@@ -62,7 +62,7 @@ Abre **`/subir.html`** en el sitio. Con usuario y contraseña permite:
 
 - Subir un **contenido.xml** nuevo (revisa que esté bien escrito antes de aceptarlo; el anterior se respalda).
 - Manejar las fotos de **`img/portada/`** y de **`img/<id>/`** de cada empresa: agregar (con el botón o arrastrándolas a la página), reemplazar, quitar (bote de basura) y cambiar el orden.
-  Las fotos se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` de menos de 1 MB y se renumeran `1, 2, 3…` solas.
+  Solo se aceptan fotos JPG/JPEG. Se reducen (portada 1920 px, empresas 1280 px), se guardan como `.jpg` de menos de 1 MB y se renumeran `1, 2, 3…` solas.
 - Subir y quitar **documentos en `docs/`** (solo PDF, hasta 60 MB; se ven en una lista para abrirlos o quitarlos). Los nombres se limpian
   (sin acentos ni espacios) y se marca «En uso» si `contenido.xml` tiene un link a ese archivo.
   `docs/lista.json` se actualiza solo: de ahí `editor.html` saca la lista para el campo de link de Brochure, Expansión
@@ -123,7 +123,7 @@ Las fotos **no se escriben en el XML**. Se ponen en carpetas dentro de `img/`:
 | `img/portada/` | carrusel de la portada (ideal 1920×1080) |
 | `img/<id>/` | slider de la tarjeta de cada empresa; `<id>` es el de `<empresa id="icave">` → `img/icave/` (ideal 1280×720) |
 
-- Nombra las fotos **`1.jpg`, `2.jpg`, `3.jpg`…** (también `.jpeg`, `.png` o `.webp`, en minúsculas). Salen en ese orden.
+- Nombra las fotos **`1.jpg`, `2.jpg`, `3.jpg`…** (también `.jpeg`, en minúsculas). Solo JPG: `.png` o `.webp` no se muestran. Salen en ese orden.
 - **Sin saltos:** el navegador no puede ver qué hay en una carpeta, así que pregunta por la 1, la 2, la 3… y se detiene en el primer número que falta. Si borras la `2.jpg`, renombra las siguientes.
 - Carpeta vacía o inexistente = esa tarjeta sale sin fotos. Para ocultarlas sin borrarlas: `<fotos visible="no"/>` dentro de la empresa.
 - Al agregar o cambiar fotos, recarga la página.

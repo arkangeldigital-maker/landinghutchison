@@ -80,7 +80,7 @@
   <div class="marco-subir" id="vista-panel" hidden>
     <div class="intro">
       <p><b>Cómo funciona:</b> prepara los cambios (XML y fotos) y pulsa <b>Publicar cambios</b>. Todo se guarda junto
-        <span class="solo-php">y queda en el sitio al momento.</span><span class="solo-github">y el sitio se actualiza solo en 1 o 2 minutos.</span> Las fotos se reducen y se guardan como <b>.jpg</b>
+        <span class="solo-php">y queda en el sitio al momento.</span><span class="solo-github">y el sitio se actualiza solo en 1 o 2 minutos.</span> Solo se aceptan fotos <b>JPG/JPEG</b>; se reducen y se guardan como <b>.jpg</b>
         (portada hasta 1920 px de ancho, empresas hasta 1280 px) y se numeran 1, 2, 3… en el orden que ves.</p>
     </div>
 
@@ -126,7 +126,7 @@
         </div>
         <div class="fotos" id="fotos"></div>
         <div class="fila-botones">
-          <label class="btn primario">+ Agregar fotos<input type="file" id="fotos-agregar" accept="image/*" multiple hidden></label>
+          <label class="btn primario">+ Agregar fotos<input type="file" id="fotos-agregar" accept=".jpg,.jpeg,image/jpeg" multiple hidden></label>
           <button type="button" class="btn chico" id="fotos-deshacer" hidden>Deshacer cambios de esta carpeta</button>
         </div>
         <p class="ayuda" id="fotos-nota"></p>
@@ -139,7 +139,7 @@
     <button type="button" class="btn primario grande" id="publicar" disabled>Publicar cambios</button>
   </footer>
 
-  <input type="file" id="reemplazar" accept="image/*" hidden>
+  <input type="file" id="reemplazar" accept=".jpg,.jpeg,image/jpeg" hidden>
   <div class="mensaje" id="mensaje" role="status" hidden></div>
   <div class="soltar" id="soltar" aria-hidden="true">Suelta las fotos aquí</div>
 
