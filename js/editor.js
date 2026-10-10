@@ -784,7 +784,7 @@
     var nav = document.getElementById('indice');
     nav.textContent = '';
     function enlace(texto, ancla, n, nivel) {
-      return h('a', { href: '#' + ancla, class: nivel || null, onclick: function (ev) { ev.preventDefault(); irA(ancla); } },
+      return h('a', { href: '#' + ancla, class: nivel || null, onclick: function (ev) { ev.preventDefault(); menu(false); irA(ancla); } },
         h('span', { text: texto }), n ? h('span', { class: 'insignia roja', text: String(n) }) : null);
     }
     nav.appendChild(enlace('General', 'sec-general'));
@@ -990,6 +990,16 @@
     pintarEstado(validar());
     mensaje('Listo: se descargó contenido.xml. Súbelo al sitio reemplazando el anterior.');
   }
+
+  // Menú de secciones en celular: el botón ☰ abre el índice como panel lateral.
+  function menu(abrir) {
+    document.body.classList.toggle('menu-abierto', abrir);
+    document.getElementById('btn-menu').setAttribute('aria-expanded', String(abrir));
+  }
+  document.getElementById('btn-menu').addEventListener('click', function () { menu(!document.body.classList.contains('menu-abierto')); });
+  document.getElementById('indice-velo').addEventListener('click', function () { menu(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu(false); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 960) menu(false); });
 
   document.getElementById('descargar').addEventListener('click', descargar);
   document.getElementById('abrir').addEventListener('change', function (e) { abrirArchivo(e.target.files[0]); e.target.value = ''; });

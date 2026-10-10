@@ -17,6 +17,9 @@
        Todo pasa en el navegador: no guarda nada en el servidor. -->
   <header class="barra">
     <div class="barra-marca">
+      <button type="button" class="btn-menu" id="btn-menu" aria-label="Abrir secciones" aria-controls="indice" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
       <svg class="simbolo" viewBox="0 0 37.7 49.6" aria-hidden="true"><polygon points="0,0 37.7,0 37.7,6.5 0,28.6" fill="#1592d3"/><polygon points="0,38.6 37.7,16.6 37.7,49.6 0,49.6" fill="#fff"/></svg>
       <div>
         <strong>Editor de contenido</strong>
@@ -46,6 +49,7 @@
 
   <div class="marco">
     <nav class="indice" id="indice" aria-label="Secciones"></nav>
+    <div class="indice-velo" id="indice-velo" aria-hidden="true"></div>
     <main>
       <div class="intro">
         <p><b>Cómo funciona:</b> edita los datos, revisa que abajo diga «Todo listo» y pulsa <b>Descargar contenido.xml</b>.
