@@ -41,6 +41,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn-menu { display: none; width: 40px; height: 40px; flex: none; place-items: center; margin-left: -8px; border: 0; border-radius: 10px; background: transparent; color: #fff; cursor: pointer; }
 .btn-menu:hover, .menu-abierto .btn-menu { background: rgba(255, 255, 255, .14); }
 .btn-menu svg { width: 24px; height: 24px; }
+.indice-velo { display: none; } /* solo existe en celular; en escritorio no debe ocupar celda en la rejilla de .marco */
 
 /* ---------- Botones ---------- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border: 1px solid var(--linea); border-radius: 10px; background: var(--blanco); color: var(--azul); font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; transition: background .15s, border-color .15s, color .15s; white-space: nowrap; }
@@ -175,7 +176,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .indice { position: fixed; top: var(--barra); left: 0; z-index: 35; width: min(300px, 85vw); height: calc(100vh - var(--barra)); height: calc(100dvh - var(--barra)); max-height: none; overscroll-behavior: contain; padding: 14px 10px calc(var(--pie) + 14px); background: var(--fondo); box-shadow: 8px 0 24px rgba(11, 42, 92, .18); transform: translateX(-105%); visibility: hidden; transition: transform .22s ease, visibility 0s .22s; }
   .indice a { padding: 11px 12px; }
   .indice a:hover, .indice a:active { background: var(--blanco); }
-  .indice-velo { position: fixed; inset: var(--barra) 0 0; z-index: 34; background: rgba(11, 42, 92, .35); opacity: 0; pointer-events: none; transition: opacity .22s; }
+  .indice-velo { display: block; position: fixed; inset: var(--barra) 0 0; z-index: 34; background: rgba(11, 42, 92, .35); opacity: 0; pointer-events: none; transition: opacity .22s; }
   .menu-abierto .indice { transform: none; visibility: visible; transition: transform .22s ease; }
   .menu-abierto .indice-velo { opacity: 1; pointer-events: auto; }
   .menu-abierto { overflow: hidden; }
