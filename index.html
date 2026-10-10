@@ -32,6 +32,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/estilos.css">
+  <!-- Modo nocturno: se aplica antes de pintar para que no parpadee.
+       Usa lo que la persona eligió con el botón (luna/sol); si nunca eligió, sigue al sistema. -->
+  <script>
+    (function () {
+      var t; try { t = localStorage.getItem('tema'); } catch (e) {}
+      if (t !== 'oscuro' && t !== 'claro') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+      document.documentElement.setAttribute('data-tema', t);
+    })();
+  </script>
 
   <!-- ═══════════════ MEDICIÓN DE VISITAS (Google Analytics 4) ═══════════════
        Reemplaza G-XXXXXXXXXX (aparece 2 veces) por tu ID de medición y quita

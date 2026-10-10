@@ -114,6 +114,12 @@ con la contraseña en `admin/acceso.json`.
 | Ocultar una empresa o categoría sin borrarla | `visible="no"` |
 | Texto y redes del pie | `<pie>` |
 
+## Modo nocturno
+
+En la cabecera hay un botón con una luna (☀ cuando ya está oscuro) que cambia la página a modo nocturno.
+La primera vez la página sigue el modo del sistema (claro u oscuro); después recuerda lo que la persona eligió
+en ese navegador. Los colores oscuros están en `css/estilos.css`, en el bloque «Modo nocturno».
+
 ## Fotos: se toman solas de las carpetas
 
 Las fotos **no se escriben en el XML**. Se ponen en carpetas dentro de `img/`:
