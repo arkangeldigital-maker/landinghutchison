@@ -310,17 +310,21 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .categoria-cab.visible .categoria-linea { transform: scaleX(1); }
 
 .tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 22px; }
-/* Pantallas grandes: rejilla de 4 columnas (cada tarjeta = 25% del contenedor).
-   Cada categoría ocupa tantas columnas como empresas tiene (--n, máximo 4), así
-   las categorías con pocas empresas comparten renglón en lugar de ocupar uno completo.
-   El subgrid alinea los encabezados y las tarjetas de las categorías del mismo renglón. */
+/* Pantallas grandes: el directorio es una rejilla de --cols columnas (3 desde 1201px,
+   4 desde 1600px, donde cada tarjeta mide el 25% del contenedor). Cada categoría ocupa
+   tantas columnas como empresas tiene (--n), así las categorías con pocas empresas
+   comparten renglón en lugar de ocupar uno completo. El subgrid alinea los encabezados
+   y las tarjetas de las categorías del mismo renglón. */
 @media (min-width: 1201px) {
-  .categorias { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 22px; }
-  .categoria { grid-column: span var(--n, 4); display: grid; grid-template-rows: subgrid; grid-row: span 2; }
-  .categoria { min-width: 0; }
-  .categoria .tarjetas { grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
+  .categorias { --cols: 3; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: 22px; }
+  .categoria { --span: min(var(--n, 4), var(--cols)); grid-column: span var(--span); display: grid; grid-template-rows: subgrid; grid-row: span 2; min-width: 0; }
+  .categoria .tarjetas { grid-template-columns: repeat(var(--span), minmax(0, 1fr)); }
   .categoria .tarjeta { min-width: 0; } /* la tarjeta no se ensancha por su contenido; el logo se reduce (ajustarLogos) */
-  .categoria-cab h2 { font-size: min(2.25rem, 1.6vw); } /* títulos largos caben en una columna */
+  .categoria-cab h2 { font-size: min(2.25rem, 2vw); } /* títulos largos caben en una columna */
+}
+@media (min-width: 1600px) {
+  .categorias { --cols: 4; }
+  .categoria-cab h2 { font-size: min(2.25rem, 1.6vw); }
 }
 
 /* ---------- Tarjeta de empresa ---------- */
