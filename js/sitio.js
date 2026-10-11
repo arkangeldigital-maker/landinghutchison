@@ -152,13 +152,37 @@
 
   function carpetaEmpresa(id) { return id ? 'img/' + id : null; }
 
-  // Busca en paralelo las fotos de la portada y de todas las empresas visibles.
+  /* img/fotos.json: lista de fotos por carpeta que se genera sola al publicar (en GitHub Pages
+     al desplegar; en el servidor PHP al publicar desde subir.html). Con ella basta una consulta;
+     si no existe (p. ej. al probar en la computadora), se pregunta foto por foto como antes. */
+  function precargado(nombre) {
+    var p = window.PRECARGA && window.PRECARGA[nombre];
+    if (p) window.PRECARGA[nombre] = null; // solo la primera vez; después se pide de nuevo
+    return p;
+  }
+  function listaFotos() {
+    var p = precargado('fotos') || fetch(deSitio('img/fotos.json') + '?v=' + Date.now(), { cache: 'no-store' });
+    return Promise.resolve(p).then(function (r) { return r && r.ok ? r.json() : null; }).then(function (lista) {
+      return lista && typeof lista === 'object' && !Array.isArray(lista) ? lista : null;
+    }).catch(function () { return null; });
+  }
+  function fotosDeLista(lista, carpeta) {
+    var fotos = Array.isArray(lista[carpeta]) ? lista[carpeta] : [];
+    return fotos.filter(function (f) {
+      return typeof f === 'string' && f.indexOf(carpeta + '/') === 0 && /^img\/[a-z0-9_-]+\/\d+\.jpg$/i.test(f);
+    }).slice(0, MAX_FOTOS).map(deSitio);
+  }
+
+  // Busca las fotos de la portada y de todas las empresas visibles.
   function buscarFotos(doc) {
     var carpetas = [CARPETA_PORTADA];
     modelo(doc.documentElement).forEach(function (c) {
       c.empresas.forEach(function (e) { if (e.id) carpetas.push(carpetaEmpresa(e.id)); });
     });
-    return Promise.all(carpetas.map(fotosDeCarpeta)).then(function (listas) {
+    return listaFotos().then(function (lista) {
+      if (lista) return carpetas.map(function (c) { return fotosDeLista(lista, c); });
+      return Promise.all(carpetas.map(fotosDeCarpeta));
+    }).then(function (listas) {
       var fotos = {};
       carpetas.forEach(function (c, i) { fotos[c] = listas[i]; });
       return fotos;
@@ -1445,6 +1469,8 @@
   var archivoArrastrado = false; // si se arrastró un XML, deja de vigilar el del servidor
 
   function descargar() {
+    var pre = precargado('xml');
+    if (pre) return pre.then(function (r) { return r && r.ok ? r.text() : descargar(); });
     return fetch(FUENTE + (FUENTE.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now(), { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('No se encontró el archivo ' + FUENTE + ' (error ' + r.status + ').');
