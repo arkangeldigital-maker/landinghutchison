@@ -609,3 +609,11 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
   .revelar { opacity: 1 !important; transform: none !important; }
   .tarjeta { break-inside: avoid; box-shadow: none; }
 }
+
+/* ---------- Pantallas muy anchas ----------
+   Desde 1600px todo el contenido (textos, íconos, logos) crece en proporción al ancho,
+   para que no se vea chico. zoom escala la caja completa sin cambiar el acomodo. */
+@media (min-width: 1600px) { .contenedor > * { zoom: 1.08; } }
+@media (min-width: 1800px) { .contenedor > * { zoom: 1.15; } }
+@media (min-width: 2200px) { .contenedor > * { zoom: 1.25; } }
+@media (min-width: 2560px) { .contenedor > * { zoom: 1.35; } }
