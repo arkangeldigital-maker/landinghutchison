@@ -17,7 +17,7 @@ const USUARIOS = __DIR__ . '/usuarios.php';
 const TMP = __DIR__ . '/tmp';
 const RESPALDOS = __DIR__ . '/respaldos';
 const PORTADA = 'img/portada';
-const EXTENSIONES = ['jpg', 'jpeg'];
+const EXTENSIONES = ['jpg', 'jpeg']; // se leen ambas; al publicar todas quedan como .jpg
 const MAX_FOTOS = 30;          // el sitio no busca más de 30 por carpeta
 const MAX_FOTO = 8 * 1048576;  // bytes por foto
 const MAX_RESPALDOS = 30;
@@ -287,7 +287,7 @@ switch ($accion) {
         } else {
           $ruta = (string)($it['existente'] ?? '');
           if (!in_array($ruta, $actuales, true)) fallar('La foto ' . $ruta . ' ya no existe. Recarga la página.');
-          $plan[] = ['origen' => RAIZ . '/' . $ruta, 'destino' => $carpeta . '/' . ($i + 1) . '.' . pathinfo($ruta, PATHINFO_EXTENSION)];
+          $plan[] = ['origen' => RAIZ . '/' . $ruta, 'destino' => $carpeta . '/' . ($i + 1) . '.jpg']; // un .jpeg se renombra: el sitio solo busca .jpg
         }
       }
       $planes[$carpeta] = ['plan' => $plan, 'actuales' => $actuales];

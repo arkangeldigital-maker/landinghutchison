@@ -20,7 +20,7 @@
   var RAMA = 'main';
   var ACCESO = 'admin/acceso.json';
   var ITERACIONES = 600000;
-  var EXTENSIONES = ['jpg', 'jpeg'];
+  var EXTENSIONES = ['jpg', 'jpeg']; // se leen ambas; al publicar todas quedan como .jpg
   var PORTADA = 'img/portada';
   var ANCHO_MAX = { portada: 1920, empresa: 1280 };
   var CALIDAD_JPG = 0.78; // fotos más ligeras: la diferencia no se nota y la página carga más rápido
@@ -497,9 +497,10 @@
     return carpetas[carpeta];
   }
 
-  // Rutas finales: 1.jpg, 2.jpg… en el orden de la lista (las existentes conservan su extensión).
+  // Rutas finales: 1.jpg, 2.jpg… en el orden de la lista (un .jpeg existente se renombra a .jpg:
+  // el sitio solo busca .jpg).
   function rutasFinales(carpeta, items) {
-    return items.map(function (it, i) { return carpeta + '/' + (i + 1) + '.' + (it.tipo === 'nueva' ? 'jpg' : it.ext); });
+    return items.map(function (it, i) { return carpeta + '/' + (i + 1) + '.jpg'; });
   }
 
   function carpetaCambio(carpeta) {
@@ -591,21 +592,17 @@
     pintarFotos();
   });
 
-  // Solo se aceptan fotos JPG/JPEG: por tipo o nombre y, además, por su firma (FF D8 FF).
-  function esJpg(archivo) {
-    if (!/^image\/jpe?g$/i.test(archivo.type) && !/\.jpe?g$/i.test(archivo.name)) return Promise.resolve(false);
-    return archivo.slice(0, 3).arrayBuffer().then(function (b) {
-      var x = new Uint8Array(b);
-      return x[0] === 0xFF && x[1] === 0xD8 && x[2] === 0xFF;
-    }).catch(function () { return false; });
+  // Se acepta cualquier imagen que el navegador pueda abrir (JPG, PNG, WebP…): siempre se guarda como JPG.
+  function esImagen(archivo) {
+    return /^image\//i.test(archivo.type) || /\.(jpe?g|png|webp|gif|bmp|avif|heic|heif)$/i.test(archivo.name);
   }
 
-  // Reduce la foto (solo JPG) y la guarda de nuevo como JPG.
+  // Reduce la foto y la guarda como JPG (las transparencias de un PNG quedan en blanco).
   function prepararFoto(archivo, anchoMax) {
-    return esJpg(archivo).then(function (si) {
-      if (!si) throw new Error('«' + archivo.name + '» no es JPG: solo se aceptan fotos .jpg o .jpeg.');
+    return Promise.resolve().then(function () {
+      if (!esImagen(archivo)) throw new Error('«' + archivo.name + '» no es una imagen.');
       return createImageBitmap(archivo).catch(function () {
-        throw new Error('No se pudo leer «' + archivo.name + '». Revisa que sea un JPG válido.');
+        throw new Error('No se pudo leer «' + archivo.name + '». Prueba con una foto JPG o PNG.');
       });
     }).then(function (bmp) {
       var escala = Math.min(1, anchoMax / bmp.width, anchoMax / bmp.height);

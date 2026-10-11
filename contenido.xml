@@ -53,8 +53,8 @@
      img/portada/        → carrusel de la portada
      img/<id>/           → slider arriba de la tarjeta de cada empresa;
                            <id> es el de <empresa id="icave"> → img/icave/
-   Nombra las fotos 1.jpg, 2.jpg, 3.jpg… (también .jpeg, .png o .webp, en
-   minúsculas). Salen en ese orden y sin saltos: si falta la 2, la 3 y las
+   Nombra las fotos 1.jpg, 2.jpg, 3.jpg… (solo .jpg, en minúsculas; desde
+   subir.html cualquier foto se convierte a .jpg). Salen en ese orden y sin saltos: si falta la 2, la 3 y las
    siguientes no aparecen. Con una sola foto el slider se ve fijo; si la
    carpeta está vacía o no existe, la tarjeta queda sin fotos.
    Para ocultar las fotos de una empresa sin borrarlas: <fotos visible="no"/>
