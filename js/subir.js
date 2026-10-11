@@ -23,7 +23,7 @@
   var EXTENSIONES = ['jpg', 'jpeg'];
   var PORTADA = 'img/portada';
   var ANCHO_MAX = { portada: 1920, empresa: 1280 };
-  var CALIDAD_JPG = 0.85;
+  var CALIDAD_JPG = 0.78; // fotos más ligeras: la diferencia no se nota y la página carga más rápido
   var SESION = 'subir-sesion';
 
   var $ = function (id) { return document.getElementById(id); };
