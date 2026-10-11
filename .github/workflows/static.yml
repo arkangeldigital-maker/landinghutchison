@@ -11,7 +11,7 @@ on:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write # para guardar img/fotos.json en el repositorio cuando cambia
   pages: write
   id-token: write
 
@@ -31,9 +31,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Lista de fotos (img/fotos.json)
+      - name: Listas de fotos y documentos (img/fotos.json, docs/lista.json)
         # El sitio lee esta lista en lugar de preguntar foto por foto si existe.
-        # Se genera en cada publicación, así siempre refleja las fotos reales.
+        # Se genera en cada publicación (también si las fotos se suben a mano), así siempre refleja las fotos reales.
         run: |
           python3 - <<'PY'
           import json, os
@@ -43,9 +43,23 @@ jobs:
               while n <= 30 and os.path.isfile(f'img/{c}/{n}.jpg'):
                   fotos.append(f'img/{c}/{n}.jpg'); n += 1
               if fotos: lista[f'img/{c}'] = fotos
-          with open('img/fotos.json', 'w') as f: json.dump(lista, f)
+          with open('img/fotos.json', 'w') as f: json.dump(lista, f, indent=1); f.write('\n')
           print(json.dumps(lista, indent=1))
+          # docs/lista.json: los PDF que existen (el sitio la usa para no revisar documento por documento).
+          import re
+          natural = lambda n: [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', n)]
+          docs = sorted((n for n in os.listdir('docs') if n.lower().endswith('.pdf') and not n.startswith('.')), key=natural) if os.path.isdir('docs') else []
+          with open('docs/lista.json', 'w') as f:
+              json.dump({'documentos': [{'nombre': n, 'url': 'docs/' + n, 'tamano': os.path.getsize('docs/' + n)} for n in docs]}, f, indent=2, ensure_ascii=False); f.write('\n')
           PY
+      - name: Guardar las listas en el repositorio si cambiaron
+        # Así el archivo también se ve en GitHub y sirve si el sitio se copia a otro servidor.
+        # (Este commit no vuelve a lanzar el despliegue: GitHub no lo hace con su propio token.)
+        run: |
+          git add img/fotos.json docs/lista.json
+          if git diff --cached --quiet; then echo "Listas sin cambios"; exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Actualiza listas de fotos y documentos"
+          git push || echo "::warning::No se pudieron guardar las listas (se publica de todos modos)"
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

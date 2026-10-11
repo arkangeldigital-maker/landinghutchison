@@ -51,7 +51,8 @@
       try {
         window.PRECARGA = {
           xml: pedir(fuente + (fuente.indexOf('?') === -1 ? '?' : '&') + v),
-          fotos: pedir(new URL('img/fotos.json', new URL(fuente, location.href)).href + '?' + v)
+          fotos: pedir(new URL('img/fotos.json', new URL(fuente, location.href)).href + '?' + v),
+          docs: pedir(new URL('docs/lista.json', new URL(fuente, location.href)).href + '?' + v)
         };
       } catch (e) {}
     })();

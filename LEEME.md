@@ -133,7 +133,7 @@ Las fotos **no se escriben en el XML**. Se ponen en carpetas dentro de `img/`:
 - **Sin saltos:** el navegador no puede ver qué hay en una carpeta, así que pregunta por la 1, la 2, la 3… y se detiene en el primer número que falta. Si borras la `2.jpg`, renombra las siguientes.
 - Carpeta vacía o inexistente = esa tarjeta sale sin fotos. Para ocultarlas sin borrarlas: `<fotos visible="no"/>` dentro de la empresa.
 - Al agregar o cambiar fotos, recarga la página.
-- `img/fotos.json` (lista de fotos) se genera sola al publicar, en GitHub y desde `/subir.html`: con ella el sitio carga más rápido. No hace falta editarla; si no existe, el sitio pregunta foto por foto.
+- `img/fotos.json` (lista de fotos) se actualiza sola en cada publicación (GitHub la regenera y la guarda; `/subir.html` en PHP también): con ella el sitio carga más rápido. No hace falta editarla; si no existe, el sitio pregunta foto por foto.
 
 Las cifras (empresas, líneas de negocio, ciudades) y la lista de ciudades **se calculan solas** a partir del XML.
 
