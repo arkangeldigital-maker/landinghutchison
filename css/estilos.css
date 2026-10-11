@@ -35,6 +35,9 @@ address { font-style: normal; }
 :focus-visible { outline: 3px solid color-mix(in srgb, var(--acento) 55%, transparent); outline-offset: 3px; border-radius: 6px; }
 
 .contenedor { width: min(1200px, 100% - 32px); margin-inline: auto; }
+@media (min-width: 1201px) {
+  .contenedor { width: 90%; }
+}
 
 /* ---------- Símbolo y logotipo ---------- */
 .simbolo { width: .76em; height: 1em; flex: none; } /* 37.7 × 49.6, como el oficial */
@@ -152,6 +155,7 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .portada-puntos .activo::after { animation: progreso 6.5s linear forwards; }
 @keyframes progreso { to { transform: scaleX(1); } }
 .portada-bajar { position: absolute; left: max(16px, calc((100% - 1200px) / 2)); bottom: 32px; width: 46px; height: 46px; display: grid; place-items: center; color: #fff; border: 1.5px solid rgba(255, 255, 255, .45); border-radius: 50%; transition: background .25s, border-color .25s; }
+@media (min-width: 1201px) { .portada-bajar { left: 5%; } }
 .portada-bajar svg { width: 20px; animation: flotar 2s ease-in-out infinite; }
 .portada-bajar:hover { background: var(--acento); border-color: var(--acento); }
 @keyframes flotar { 50% { transform: translateY(4px); } }
