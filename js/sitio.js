@@ -210,7 +210,19 @@
       });
     });
     var lista = Object.keys(urls);
-    return Promise.all(lista.map(function (u) { return existeArchivo(deSitio(u)); })).then(function (existe) {
+    // docs/lista.json dice qué PDF existen: así no hay que preguntar documento por documento.
+    var p = precargado('docs') || fetch(deSitio('docs/lista.json') + '?v=' + Date.now(), { cache: 'no-store' });
+    return Promise.resolve(p).then(function (r) { return r && r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (l) {
+      var hay = null;
+      if (l && Array.isArray(l.documentos)) {
+        hay = {};
+        l.documentos.forEach(function (d) { if (d && typeof d.url === 'string') hay[d.url] = true; });
+      }
+      return Promise.all(lista.map(function (u) {
+        if (hay && /^docs\/[^/]+$/.test(u)) return hay[u] === true;
+        return existeArchivo(deSitio(u));
+      }));
+    }).then(function (existe) {
       var faltan = {};
       lista.forEach(function (u, i) { if (!existe[i]) faltan[u] = true; });
       return faltan;
