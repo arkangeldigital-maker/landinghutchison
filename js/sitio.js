@@ -822,7 +822,8 @@
       h('input', { type: 'search', id: 'buscar', placeholder: 'Buscar empresa, ciudad o correo…', 'aria-label': 'Buscar en el directorio', autocomplete: 'off' }));
 
     var secciones = categorias.map(function (c, n) {
-      return h('section', { class: 'categoria', id: c.id, 'data-cat': c.id },
+      // --n: columnas que ocupa la categoría en pantallas grandes (una por empresa, máximo 4)
+      return h('section', { class: 'categoria', id: c.id, 'data-cat': c.id, style: '--n:' + Math.min(c.empresas.length, 4) },
         h('header', { class: 'categoria-cab revelar' },
           h('span', { class: 'categoria-num', text: ('0' + (n + 1)).slice(-2) }),
           h('h2', { text: c.nombre }),
@@ -849,7 +850,7 @@
             buscador)),
         h('p', { class: 'sin-resultados', id: 'sin-resultados', hidden: 'hidden' }, 'No encontramos resultados. ',
           h('button', { type: 'button', class: 'link-limpiar', text: 'Ver todo el directorio' })),
-        secciones));
+        h('div', { class: 'categorias' }, secciones)));
   }
 
   // {año} en el XML se cambia por el año actual (para el © del pie).
@@ -1278,6 +1279,7 @@
           if (ok) { visibles++; t.classList.add('visible'); }
         });
         sec.hidden = visibles === 0;
+        sec.style.setProperty('--n', Math.min(Math.max(visibles, 1), 4));
         total += visibles;
         // "1 de 4 empresas" mientras hay un filtro; el texto original sin filtro.
         var cuenta = sec.querySelector('.categoria-cuenta');
