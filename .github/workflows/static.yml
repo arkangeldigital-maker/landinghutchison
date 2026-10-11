@@ -31,6 +31,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Lista de fotos (img/fotos.json)
+        # El sitio lee esta lista en lugar de preguntar foto por foto si existe.
+        # Se genera en cada publicación, así siempre refleja las fotos reales.
+        run: |
+          python3 - <<'PY'
+          import json, os
+          lista = {}
+          for c in sorted(os.listdir('img')):
+              fotos, n = [], 1
+              while n <= 30 and os.path.isfile(f'img/{c}/{n}.jpg'):
+                  fotos.append(f'img/{c}/{n}.jpg'); n += 1
+              if fotos: lista[f'img/{c}'] = fotos
+          with open('img/fotos.json', 'w') as f: json.dump(lista, f)
+          print(json.dumps(lista, indent=1))
+          PY
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

@@ -120,6 +120,19 @@ function fotosDe(string $carpeta): array
   return $lista;
 }
 
+// img/fotos.json: el sitio la lee en lugar de preguntar foto por foto (solo .jpg, sin saltos).
+function guardarListaFotos(): void
+{
+  $lista = [];
+  foreach (glob(RAIZ . '/img/*', GLOB_ONLYDIR) ?: [] as $dir) {
+    $c = 'img/' . basename($dir);
+    $fotos = [];
+    for ($n = 1; $n <= MAX_FOTOS && is_file($dir . '/' . $n . '.jpg'); $n++) $fotos[] = $c . '/' . $n . '.jpg';
+    if ($fotos) $lista[$c] = $fotos;
+  }
+  escribirAtomico(RAIZ . '/img/fotos.json', json_encode((object)$lista, JSON_UNESCAPED_SLASHES));
+}
+
 // Nombre de documento seguro: letras, números, punto, guion y guion bajo, con extensión permitida.
 function nombreDoc(string $n): string
 {
@@ -229,6 +242,7 @@ switch ($accion) {
       if ($c !== PORTADA && !preg_match('#^img/[a-z0-9][a-z0-9_-]*$#', $c)) continue;
       foreach (fotosDe($c) as $f) $rutas[$f['ruta']] = $f['version'];
     }
+    if (is_writable(RAIZ . '/img')) guardarListaFotos(); // por si se copiaron fotos a mano
     responder(['xml' => $xml, 'rutas' => $rutas, 'docs' => listaDocs()]);
 
   case 'docs':
@@ -348,6 +362,7 @@ switch ($accion) {
       guardarListaDocs();
     }
 
+    guardarListaFotos();
     if ($candado) { flock($candado, LOCK_UN); fclose($candado); }
     responder(['ok' => true]);
 

@@ -43,6 +43,19 @@
       document.documentElement.setAttribute('data-tema', t);
     })();
   </script>
+  <!-- El contenido y la lista de fotos empiezan a bajar desde ya, sin esperar a js/sitio.js. -->
+  <script>
+    (function () {
+      var fuente = document.documentElement.getAttribute('data-xml') || 'contenido.xml', v = 'v=' + Date.now();
+      function pedir(u) { return fetch(u, { cache: 'no-store' }).catch(function () { return null; }); }
+      try {
+        window.PRECARGA = {
+          xml: pedir(fuente + (fuente.indexOf('?') === -1 ? '?' : '&') + v),
+          fotos: pedir(new URL('img/fotos.json', new URL(fuente, location.href)).href + '?' + v)
+        };
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- ═══════════════ MEDICIÓN DE VISITAS (Google Analytics 4) ═══════════════
        Reemplaza G-XXXXXXXXXX (aparece 2 veces) por tu ID de medición y quita
