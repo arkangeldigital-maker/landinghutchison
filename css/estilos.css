@@ -322,6 +322,10 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
   .categoria { --span: min(var(--n, 4), var(--cols)); grid-column: span var(--span); display: grid; grid-template-rows: subgrid; grid-row: span 2; min-width: 0; }
   .categoria .tarjetas { grid-template-columns: repeat(var(--span), minmax(0, 1fr)); }
   .categoria .tarjeta { min-width: 0; } /* la tarjeta no se ensancha por su contenido; el logo se reduce (ajustarLogos) */
+  /* Encabezados alineados arriba: número y conteo en la misma línea y el título debajo,
+     así los títulos de una fila empiezan a la misma altura aunque ocupen distintos renglones. */
+  .categoria-cab { align-content: start; }
+  .categoria-cuenta { grid-row: 1; grid-column: 2; }
   .categoria-cab h2 { font-size: min(2.25rem, 2vw); } /* títulos largos caben en una columna */
 }
 @media (min-width: 1600px) {
