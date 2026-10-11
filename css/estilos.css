@@ -36,7 +36,7 @@ address { font-style: normal; }
 
 .contenedor { width: min(1200px, 100% - 32px); margin-inline: auto; }
 @media (min-width: 1201px) {
-  .contenedor { width: 90%; }
+  .contenedor { width: 80%; }
 }
 
 /* ---------- Símbolo y logotipo ---------- */
@@ -155,7 +155,7 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .portada-puntos .activo::after { animation: progreso 6.5s linear forwards; }
 @keyframes progreso { to { transform: scaleX(1); } }
 .portada-bajar { position: absolute; left: max(16px, calc((100% - 1200px) / 2)); bottom: 32px; width: 46px; height: 46px; display: grid; place-items: center; color: #fff; border: 1.5px solid rgba(255, 255, 255, .45); border-radius: 50%; transition: background .25s, border-color .25s; }
-@media (min-width: 1201px) { .portada-bajar { left: 5%; } }
+@media (min-width: 1201px) { .portada-bajar { left: 10%; } }
 .portada-bajar svg { width: 20px; animation: flotar 2s ease-in-out infinite; }
 .portada-bajar:hover { background: var(--acento); border-color: var(--acento); }
 @keyframes flotar { 50% { transform: translateY(4px); } }
@@ -310,6 +310,18 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .categoria-cab.visible .categoria-linea { transform: scaleX(1); }
 
 .tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 22px; }
+/* Pantallas grandes: rejilla de 4 columnas (cada tarjeta = 25% del contenedor).
+   Cada categoría ocupa tantas columnas como empresas tiene (--n, máximo 4), así
+   las categorías con pocas empresas comparten renglón en lugar de ocupar uno completo.
+   El subgrid alinea los encabezados y las tarjetas de las categorías del mismo renglón. */
+@media (min-width: 1201px) {
+  .categorias { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 22px; }
+  .categoria { grid-column: span var(--n, 4); display: grid; grid-template-rows: subgrid; grid-row: span 2; }
+  .categoria { min-width: 0; }
+  .categoria .tarjetas { grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
+  .categoria .tarjeta { min-width: 0; } /* la tarjeta no se ensancha por su contenido; el logo se reduce (ajustarLogos) */
+  .categoria-cab h2 { font-size: min(2.25rem, 1.6vw); } /* títulos largos caben en una columna */
+}
 
 /* ---------- Tarjeta de empresa ---------- */
 .tarjeta { --pad-t: 28px; --pad-x: 26px; position: relative; display: flex; flex-direction: column; gap: 22px; padding: var(--pad-t) var(--pad-x) 24px; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); box-shadow: var(--sombra); overflow: hidden; isolation: isolate; transition: transform .45s var(--curva), box-shadow .45s var(--curva), border-color .3s; }
