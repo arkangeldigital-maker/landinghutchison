@@ -64,9 +64,16 @@
   function hijo(el, nombre) { return hijos(el, nombre)[0] || null; }
   function txt(el, nombre) {
     var n = nombre ? hijo(el, nombre) : el;
+    if (!n) return '';
     return n ? n.textContent.replace(/\s+/g, ' ').trim() : '';
   }
   function crudo(el) { return new XMLSerializer().serializeToString(el); }
+  // Textos en dos idiomas: <titulo> es el español y <titulo lang="en"> la traducción.
+  function esIngles(n) { return n.getAttribute('lang') === 'en'; }
+  function base(el, nombre) { return hijos(el, nombre).filter(function (n) { return !n.getAttribute('lang') || n.getAttribute('lang') === 'es'; })[0] || null; }
+  function trad(el, nombre) { return hijos(el, nombre).filter(esIngles)[0] || null; }
+  function txtEs(el, nombre) { return txt(base(el, nombre)); }
+  function txtEn(el, nombre) { return txt(trad(el, nombre)); }
   function otrosAtributos(el, conocidos) {
     return Array.prototype.filter.call(el.attributes, function (a) { return conocidos.indexOf(a.name) === -1; })
       .map(function (a) { return [a.name, a.value]; });
@@ -101,7 +108,7 @@
   function leerRedes(el) {
     return hijos(el, 'red').map(function (r) {
       return { tipo: r.getAttribute('tipo') || 'web', url: r.getAttribute('url') || '', texto: r.getAttribute('texto') || '',
-        extra: otrosAtributos(r, ['tipo', 'url', 'texto']) };
+        textoEn: r.getAttribute('texto-en') || '', extra: otrosAtributos(r, ['tipo', 'url', 'texto', 'texto-en']) };
     });
   }
 
@@ -125,7 +132,8 @@
       id: e.getAttribute('id') || '', oculta: oculto(e), comentarios: comentarios,
       nombre: txt(e, 'nombre'), logo: txt(e, 'logo'),
       ciudades: hijos(e, 'ciudad').map(function (c) { return txt(c); }),
-      descripcion: leerParrafos(hijo(e, 'descripcion')),
+      descripcion: leerParrafos(base(e, 'descripcion')),
+      descripcionEn: leerParrafos(trad(e, 'descripcion')),
       fotosOcultas: !!(fotos && oculto(fotos)),
       contacto: [], redes: leerRedes(hijo(e, 'redes'))
     };
@@ -136,7 +144,7 @@
   function esBanner(texto) { return /═/.test(texto) && texto.indexOf('\n') === -1; }
 
   function aModelo(doc) {
-    var r = { prologo: [], general: { extra: [] }, portada: null, mapa: null, categorias: [], pie: null, extra: [] };
+    var r = { prologo: [], general: { extra: [] }, portada: null, mapa: null, video: null, cta: null, categorias: [], pie: null, extra: [] };
     Array.prototype.forEach.call(doc.childNodes, function (n) {
       if (n.nodeType === 8 && doc.documentElement.compareDocumentPosition(n) & Node.DOCUMENT_POSITION_PRECEDING) {
         r.prologo.push('<!--' + n.data + '-->');
@@ -151,25 +159,40 @@
       switch (n.nodeName) {
         case 'general':
           Array.prototype.forEach.call(n.children, function (c) {
-            if (['titulo', 'descripcion', 'color-principal', 'color-acento', 'estilo-enlaces', 'efecto-fondo'].indexOf(c.nodeName) !== -1) r.general[c.nodeName] = txt(c);
+            if (['titulo', 'descripcion'].indexOf(c.nodeName) !== -1) r.general[c.nodeName + (esIngles(c) ? 'En' : '')] = txt(c);
+            else if (['color-principal', 'color-acento', 'estilo-enlaces', 'efecto-fondo'].indexOf(c.nodeName) !== -1) r.general[c.nodeName] = txt(c);
             else r.general.extra.push(crudo(c));
           });
           r.general.comentarios = com;
           break;
         case 'portada':
-          r.portada = { comentarios: com, antetitulo: txt(n, 'antetitulo'), titulo: txt(n, 'titulo'),
-            texto: leerParrafos(hijo(n, 'texto')), redes: leerRedes(hijo(n, 'redes')),
+          r.portada = { comentarios: com, antetitulo: txtEs(n, 'antetitulo'), titulo: txtEs(n, 'titulo'),
+            antetituloEn: txtEn(n, 'antetitulo'), tituloEn: txtEn(n, 'titulo'),
+            texto: leerParrafos(base(n, 'texto')), textoEn: leerParrafos(trad(n, 'texto')), redes: leerRedes(hijo(n, 'redes')),
             extra: Array.prototype.filter.call(n.children, function (c) { return ['antetitulo', 'titulo', 'texto', 'redes', 'foto'].indexOf(c.nodeName) === -1; }).map(crudo) };
           break;
         case 'mapa':
           r.mapa = { comentarios: com, titulo: n.getAttribute('titulo') || '', subtitulo: n.getAttribute('subtitulo') || '', oculto: oculto(n),
+            tituloEn: n.getAttribute('titulo-en') || '', subtituloEn: n.getAttribute('subtitulo-en') || '',
             puntos: hijos(n, 'punto').map(function (p) {
               return { ciudad: p.getAttribute('ciudad') || '', lat: p.getAttribute('lat') || '', lon: p.getAttribute('lon') || '', etiqueta: p.getAttribute('etiqueta') || 'derecha' };
             }),
             corredores: hijos(n, 'corredor').map(function (c) { return { de: c.getAttribute('de') || '', a: c.getAttribute('a') || '' }; }) };
           break;
+        case 'cta':
+          r.cta = { comentarios: com, url: n.getAttribute('url') || '', oculto: oculto(n),
+            extra: Array.prototype.filter.call(n.children, function (c) { return ['antetitulo', 'titulo', 'texto', 'boton'].indexOf(c.nodeName) === -1; }).map(crudo) };
+          ['antetitulo', 'titulo', 'boton'].forEach(function (k) { r.cta[k] = txtEs(n, k); r.cta[k + 'En'] = txtEn(n, k); });
+          r.cta.texto = leerParrafos(base(n, 'texto'));
+          r.cta.textoEn = leerParrafos(trad(n, 'texto'));
+          break;
+        case 'video':
+          r.video = { comentarios: com, url: n.getAttribute('url') || '', titulo: n.getAttribute('titulo') || '', tituloEn: n.getAttribute('titulo-en') || '', oculto: oculto(n),
+            extra: otrosAtributos(n, ['url', 'titulo', 'titulo-en', 'visible']) };
+          break;
         case 'categoria':
-          var cat = { comentarios: com, id: n.getAttribute('id') || '', nombre: n.getAttribute('nombre') || '', corto: n.getAttribute('corto') || '', oculta: oculto(n), empresas: [] };
+          var cat = { comentarios: com, id: n.getAttribute('id') || '', nombre: n.getAttribute('nombre') || '', corto: n.getAttribute('corto') || '', oculta: oculto(n), empresas: [],
+            nombreEn: n.getAttribute('nombre-en') || '', cortoEn: n.getAttribute('corto-en') || '' };
           var comEmp = [];
           Array.prototype.forEach.call(n.childNodes, function (c) {
             if (c.nodeType === 8) comEmp.push('<!--' + c.data + '-->');
@@ -178,12 +201,14 @@
           r.categorias.push(cat);
           break;
         case 'pie':
-          var pie = { comentarios: com, texto: txt(n, 'texto'), leyenda: hijo(n, 'leyenda') ? aMarcado(hijo(n, 'leyenda')) : '', enlaces: [], redes: leerRedes(hijo(n, 'redes')), extra: [] };
+          var pie = { comentarios: com, texto: txtEs(n, 'texto'), textoEn: txtEn(n, 'texto'),
+            leyenda: base(n, 'leyenda') ? aMarcado(base(n, 'leyenda')) : '', leyendaEn: trad(n, 'leyenda') ? aMarcado(trad(n, 'leyenda')) : '',
+            enlaces: [], redes: leerRedes(hijo(n, 'redes')), extra: [] };
           var comEnl = [];
           Array.prototype.forEach.call(n.childNodes, function (c) {
             if (c.nodeType === 8) { comEnl.push('<!--' + c.data + '-->'); return; }
             if (c.nodeType !== 1) return;
-            if (c.nodeName === 'enlace') pie.enlaces.push({ texto: aMarcado(c), url: c.getAttribute('url') || '', comentarios: comEnl });
+            if (c.nodeName === 'enlace') pie.enlaces.push({ texto: aMarcado(c), textoEn: c.getAttribute('texto-en') || '', url: c.getAttribute('url') || '', comentarios: comEnl });
             else if (['texto', 'leyenda', 'redes'].indexOf(c.nodeName) === -1) pie.extra.push(crudo(c));
             comEnl = [];
           });
@@ -225,19 +250,20 @@
     function vacio(n, nombre, attrs) { w(n, '<' + nombre + at(attrs) + ' />'); }
     function comentarios(n, lista) { (lista || []).forEach(function (c) { w(n, c); }); }
     function opcional(v) { return v && String(v).trim() ? String(v).trim() : null; }
+    var EN = [['lang', 'en']];
     function redes(n, lista) {
       if (!lista.length) return;
       w(n, '<redes>');
       lista.forEach(function (r) {
-        vacio(n + 1, 'red', [['tipo', r.tipo], ['url', r.url.trim()], ['texto', opcional(r.texto)]].concat(r.extra || []));
+        vacio(n + 1, 'red', [['tipo', r.tipo], ['url', r.url.trim()], ['texto', opcional(r.texto)], ['texto-en', opcional(r.textoEn)]].concat(r.extra || []));
       });
       w(n, '</redes>');
     }
-    function parrafos(n, nombre, texto, conP) {
-      var ps = texto.split(/\n\s*\n/).map(function (p) { return p.trim(); }).filter(Boolean);
+    function parrafos(n, nombre, texto, conP, attrs) {
+      var ps = String(texto || '').split(/\n\s*\n/).map(function (p) { return p.trim(); }).filter(Boolean);
       if (!ps.length) return;
-      if (ps.length === 1 && !conP) return elem(n, nombre, [], deMarcado(ps[0]));
-      w(n, '<' + nombre + '>');
+      if (ps.length === 1 && !conP) return elem(n, nombre, attrs || [], deMarcado(ps[0]));
+      w(n, '<' + nombre + at(attrs || []) + '>');
       ps.forEach(function (p) { elem(n + 1, 'p', [], deMarcado(p)); });
       w(n, '</' + nombre + '>');
     }
@@ -260,7 +286,9 @@
     comentarios(1, g.comentarios);
     w(1, '<general>');
     elem(2, 'titulo', [], esc(g.titulo || ''));
+    if (opcional(g.tituloEn)) elem(2, 'titulo', EN, esc(g.tituloEn.trim()));
     elem(2, 'descripcion', [], esc(g.descripcion || ''));
+    if (opcional(g.descripcionEn)) elem(2, 'descripcion', EN, esc(g.descripcionEn.trim()));
     elem(2, 'color-principal', [], esc(g['color-principal'] || '#0b2a5c'));
     elem(2, 'color-acento', [], esc(g['color-acento'] || '#1592d3'));
     w(2, '<!-- Cómo se acomodan los links al pie de cada tarjeta: filas | banda | compacto -->');
@@ -275,8 +303,11 @@
       comentarios(1, p.comentarios);
       w(1, '<portada>');
       if (opcional(p.antetitulo)) elem(2, 'antetitulo', [], esc(p.antetitulo.trim()));
+      if (opcional(p.antetituloEn)) elem(2, 'antetitulo', EN, esc(p.antetituloEn.trim()));
       elem(2, 'titulo', [], esc(p.titulo.trim()));
+      if (opcional(p.tituloEn)) elem(2, 'titulo', EN, esc(p.tituloEn.trim()));
       parrafos(2, 'texto', p.texto, true);
+      parrafos(2, 'texto', p.textoEn, true, EN);
       redes(2, p.redes);
       p.extra.forEach(function (x) { w(2, x); });
       w(1, '</portada>'); o.push('');
@@ -285,16 +316,23 @@
     if (d.mapa) {
       var mp = d.mapa;
       comentarios(1, mp.comentarios);
-      w(1, '<mapa' + at([['titulo', mp.titulo.trim()], ['subtitulo', mp.subtitulo.trim()], ['visible', mp.oculto ? 'no' : null]]) + '>');
+      w(1, '<mapa' + at([['titulo', mp.titulo.trim()], ['titulo-en', opcional(mp.tituloEn)], ['subtitulo', mp.subtitulo.trim()], ['subtitulo-en', opcional(mp.subtituloEn)], ['visible', mp.oculto ? 'no' : null]]) + '>');
       mp.puntos.forEach(function (pt) { vacio(2, 'punto', [['ciudad', pt.ciudad.trim()], ['lat', pt.lat.trim()], ['lon', pt.lon.trim()], ['etiqueta', pt.etiqueta]]); });
       mp.corredores.forEach(function (c) { vacio(2, 'corredor', [['de', c.de], ['a', c.a]]); });
       w(1, '</mapa>'); o.push('');
     }
 
+    if (d.video) {
+      var v = d.video;
+      comentarios(1, v.comentarios);
+      vacio(1, 'video', [['url', v.url.trim()], ['titulo', opcional(v.titulo)], ['titulo-en', opcional(v.tituloEn)], ['visible', v.oculto ? 'no' : null]].concat(v.extra || []));
+      o.push('');
+    }
+
     d.categorias.forEach(function (c) {
       w(1, '<!-- ═══════════════ ' + esc(c.nombre.trim().toUpperCase()).replace(/--/g, '—') + ' ═══════════════ -->');
       comentarios(1, c.comentarios);
-      w(1, '<categoria' + at([['id', c.id], ['nombre', c.nombre.trim()], ['corto', opcional(c.corto)], ['visible', c.oculta ? 'no' : null]]) + '>');
+      w(1, '<categoria' + at([['id', c.id], ['nombre', c.nombre.trim()], ['nombre-en', opcional(c.nombreEn)], ['corto', opcional(c.corto)], ['corto-en', opcional(c.cortoEn)], ['visible', c.oculta ? 'no' : null]]) + '>');
       o.push('');
       c.empresas.forEach(function (e) {
         comentarios(2, e.comentarios);
@@ -304,6 +342,7 @@
         if (e.fotosOcultas) vacio(3, 'fotos', [['visible', 'no']]);
         e.ciudades.forEach(function (ci) { if (ci.trim()) elem(3, 'ciudad', [], esc(ci.trim())); });
         parrafos(3, 'descripcion', e.descripcion || '', false);
+        parrafos(3, 'descripcion', e.descripcionEn || '', false, EN);
         e.contacto.forEach(function (x) { dato(3, x); });
         redes(3, e.redes);
         w(2, '</empresa>'); o.push('');
@@ -313,13 +352,31 @@
 
     d.extra.forEach(function (x) { comentarios(1, x.comentarios); w(1, x.xml); o.push(''); });
 
+    if (d.cta) {
+      var ct = d.cta;
+      comentarios(1, ct.comentarios);
+      w(1, '<cta' + at([['url', ct.url.trim()], ['visible', ct.oculto ? 'no' : null]]) + '>');
+      ['antetitulo', 'titulo'].forEach(function (k) {
+        if (opcional(ct[k])) elem(2, k, [], esc(ct[k].trim()));
+        if (opcional(ct[k + 'En'])) elem(2, k, EN, esc(ct[k + 'En'].trim()));
+      });
+      parrafos(2, 'texto', ct.texto, false);
+      parrafos(2, 'texto', ct.textoEn, false, EN);
+      if (opcional(ct.boton)) elem(2, 'boton', [], esc(ct.boton.trim()));
+      if (opcional(ct.botonEn)) elem(2, 'boton', EN, esc(ct.botonEn.trim()));
+      ct.extra.forEach(function (x) { w(2, x); });
+      w(1, '</cta>'); o.push('');
+    }
+
     if (d.pie) {
       var pie = d.pie;
       comentarios(1, pie.comentarios);
       w(1, '<pie>');
       elem(2, 'texto', [], esc(pie.texto.trim()));
+      if (opcional(pie.textoEn)) elem(2, 'texto', EN, esc(pie.textoEn.trim()));
       if (opcional(pie.leyenda)) elem(2, 'leyenda', [], deMarcado(pie.leyenda.trim()));
-      pie.enlaces.forEach(function (e) { comentarios(2, e.comentarios); elem(2, 'enlace', [['url', e.url.trim()]], deMarcado(e.texto.trim())); });
+      if (opcional(pie.leyendaEn)) elem(2, 'leyenda', EN, deMarcado(pie.leyendaEn.trim()));
+      pie.enlaces.forEach(function (e) { comentarios(2, e.comentarios); elem(2, 'enlace', [['url', e.url.trim()], ['texto-en', opcional(e.textoEn)]], deMarcado(e.texto.trim())); });
       redes(2, pie.redes);
       pie.extra.forEach(function (x) { w(2, x); });
       w(1, '</pie>'); o.push('');
@@ -391,6 +448,12 @@
         if (url && !existeArchivo(url)) res.push({ nivel: 'aviso', texto: 'Pie: el link «' + (e.texto || url) + '» apunta a «' + url + '» y ese archivo no existe (no se mostrará).', ancla: 'sec-pie' });
       });
     }
+    if (m.cta && !m.cta.oculto) {
+      if (!String(m.cta.titulo || '').trim()) res.push({ nivel: 'error', texto: 'Invitación: falta el título.', ancla: 'sec-cta' });
+      if (!String(m.cta.url || '').trim()) res.push({ nivel: 'aviso', texto: 'Invitación: sin link del botón no se muestra en el sitio.', ancla: 'sec-cta' });
+      else if (!existeArchivo(m.cta.url)) res.push({ nivel: 'aviso', texto: 'Invitación: el link apunta a «' + m.cta.url.trim() + '» y ese archivo no existe (no se mostrará).', ancla: 'sec-cta' });
+    }
+    if (m.video && !m.video.oculto && !idYoutube(m.video.url)) res.push({ nivel: 'error', texto: 'Video: falta el link de YouTube o no es válido (o quita el video).', ancla: 'sec-video' });
     var ids = {};
     var ciudadesMapa = m.mapa ? m.mapa.puntos.map(function (p) { return p.ciudad.trim(); }) : [];
     m.categorias.forEach(function (c, ci) {
@@ -453,6 +516,19 @@
       op.ayuda ? h('p', { class: 'ayuda', text: op.ayuda }) : null);
   }
 
+  // El mismo texto en español y en inglés, lado a lado. obj[prop] es el español y obj[prop + 'En'] el inglés.
+  function idioma(codigo) { return h('span', { class: 'idioma idioma-' + codigo.toLowerCase(), text: codigo }); }
+  function bilingue(etiqueta, obj, prop, op) {
+    op = op || {};
+    var es = Object.assign({}, op, { ayuda: null });
+    var en = Object.assign({}, op, { ayuda: null, requerido: false, alCambiar: null, repintar: false,
+      placeholder: op.placeholderEn || (op.multilinea ? 'English version (optional). If empty, the Spanish text is shown.' : 'In English (optional)') });
+    return h('div', { class: 'bilingue' + (op.claseCaja ? ' ' + op.claseCaja : '') },
+      campo(etiqueta ? [etiqueta, ' ', idioma('ES')] : null, obj, prop, es),
+      campo(etiqueta ? [etiqueta, ' ', idioma('EN')] : null, obj, prop + 'En', en),
+      op.ayuda ? h('p', { class: 'ayuda', text: op.ayuda }) : null);
+  }
+
   function boton(texto, fn, clase, extra) {
     return h('button', Object.assign({ type: 'button', class: 'btn ' + (clase || ''), onclick: fn }, extra || {}), texto);
   }
@@ -498,18 +574,19 @@
         campo(null, r, 'tipo', { opciones: REDES, clase: 'c-tipo', repintar: true }),
         campo(null, r, 'url', { placeholder: esDoc ? 'Elige un documento de docs/ o pega un link https://…' : 'https://…', clase: 'c-url', tipo: 'text', inputmode: 'url', lista: esDoc ? 'docs-sitio' : null }),
         esDoc ? campo(null, r, 'texto', { placeholder: 'Texto del botón (opcional)', clase: 'c-texto' }) : null,
+        esDoc ? campo(null, r, 'textoEn', { placeholder: 'Button text in English', clase: 'c-texto' }) : null,
         controlesFila(lista, i)));
     });
     var usados = lista.map(function (r) { return r.tipo; });
     var agregar = h('div', { class: 'agregar' }, h('span', { class: 'agregar-txt', text: 'Agregar:' }),
       REDES.map(function (t) {
-        return boton('+ ' + t[1], function () { lista.push({ tipo: t[0], url: '', texto: '', extra: [] }); cambio(true, true); },
+        return boton('+ ' + t[1], function () { lista.push({ tipo: t[0], url: '', texto: '', textoEn: '', extra: [] }); cambio(true, true); },
           'chip' + (usados.indexOf(t[0]) !== -1 ? ' usado' : ''));
       }));
     return h('div', { class: 'bloque' },
       h('h4', { text: 'Redes y documentos' }, h('span', { class: 'opcional', text: ' · opcionales' })),
       filas, agregar,
-      h('p', { class: 'ayuda', text: 'En Brochure y Expansión, al escribir o al pulsar la flecha del campo aparece la lista de documentos de docs/ (se suben en subir.html); también puedes pegar un link externo. Si un renglón queda sin link, no se muestra en el sitio.' }));
+      h('p', { class: 'ayuda', text: 'En Brochure y Expansión, al escribir o al pulsar la flecha del campo aparece la lista de documentos de docs/ (se suben en subir.html); también puedes pegar un link externo. Si un renglón queda sin link, no se muestra en el sitio. Los links y documentos son los mismos en español e inglés; solo el texto del botón se puede traducir.' }));
   }
 
   /* ---------- Datos de contacto ---------- */
@@ -599,7 +676,7 @@
         h('h4', { text: 'Ciudades' }),
         ciudades,
         h('div', { class: 'agregar' }, boton('+ Ciudad', function () { e.ciudades.push(''); cambio(true, true); }, 'chip'))),
-      campo('Descripción (opcional)', e, 'descripcion', { multilinea: true, filas: 2, placeholder: 'Texto corto debajo del logo.' }),
+      bilingue('Descripción (opcional)', e, 'descripcion', { multilinea: true, filas: 2, placeholder: 'Texto corto debajo del logo.', placeholderEn: 'Short text under the logo, in English.' }),
       editorContacto(e),
       editorRedes(e.redes),
       h('div', { class: 'empresa-pie' },
@@ -624,7 +701,7 @@
   }
 
   function empresaNueva() {
-    return { id: '', idAuto: true, oculta: false, comentarios: [], nombre: '', logo: '', ciudades: [''], descripcion: '', fotosOcultas: false,
+    return { id: '', idAuto: true, oculta: false, comentarios: [], nombre: '', logo: '', ciudades: [''], descripcion: '', descripcionEn: '', fotosOcultas: false,
       contacto: [
         { tipo: 'direccion', valor: '', etiqueta: '', url: '', extra: [] },
         { tipo: 'telefono', valor: '', etiqueta: '', url: '', extra: [] },
@@ -637,11 +714,11 @@
   function seccionGeneral() {
     var s = seccion('sec-general', 'General', 'Pestaña del navegador, Google y colores de la marca.');
     var g = m.general;
+    s.cuerpo.appendChild(bilingue('Título de la pestaña', g, 'titulo', { requerido: true }));
+    s.cuerpo.appendChild(bilingue('Descripción para Google', g, 'descripcion', { multilinea: true, filas: 2 }));
     s.cuerpo.appendChild(h('div', { class: 'rejilla' },
-      campo('Título de la pestaña', g, 'titulo', { requerido: true }),
       campo('Color principal', g, 'color-principal', { tipo: 'color', clase: 'c-color' }),
       campo('Color de acento', g, 'color-acento', { tipo: 'color', clase: 'c-color' })));
-    s.cuerpo.appendChild(campo('Descripción para Google', g, 'descripcion', { multilinea: true, filas: 2 }));
     s.cuerpo.appendChild(h('div', { class: 'rejilla' },
       campo('Links al pie de cada tarjeta', g, 'estilo-enlaces', { opciones: ESTILOS_ENLACES }),
       campo('Efecto detrás del directorio', g, 'efecto-fondo', { opciones: FONDOS })));
@@ -649,13 +726,12 @@
   }
 
   function seccionPortada() {
-    if (!m.portada) m.portada = { comentarios: [], antetitulo: '', titulo: '', texto: '', redes: [], extra: [] };
+    if (!m.portada) m.portada = { comentarios: [], antetitulo: '', titulo: '', texto: '', antetituloEn: '', tituloEn: '', textoEn: '', redes: [], extra: [] };
     var p = m.portada;
     var s = seccion('sec-portada', 'Portada', 'Las fotos se toman solas de img/portada/ (1.jpg, 2.jpg…; solo JPG).');
-    s.cuerpo.appendChild(h('div', { class: 'rejilla' },
-      campo('Antetítulo', p, 'antetitulo', { placeholder: 'Directorio' }),
-      campo('Título', p, 'titulo', { requerido: true })));
-    s.cuerpo.appendChild(campo('Texto', p, 'texto', { multilinea: true, filas: 3,
+    s.cuerpo.appendChild(bilingue('Antetítulo', p, 'antetitulo', { placeholder: 'Directorio', placeholderEn: 'Directory' }));
+    s.cuerpo.appendChild(bilingue('Título', p, 'titulo', { requerido: true }));
+    s.cuerpo.appendChild(bilingue('Texto', p, 'texto', { multilinea: true, filas: 3,
       ayuda: 'Deja una línea en blanco entre párrafos. **negrita**, *cursiva*, [texto del link](https://…)' }));
     s.cuerpo.appendChild(editorRedes(p.redes));
     return s;
@@ -669,9 +745,8 @@
       return s;
     }
     var mp = m.mapa;
-    s.cuerpo.appendChild(h('div', { class: 'rejilla' },
-      campo('Título', mp, 'titulo'),
-      campo('Subtítulo', mp, 'subtitulo', { clase: 'ancho' })));
+    s.cuerpo.appendChild(bilingue('Título', mp, 'titulo'));
+    s.cuerpo.appendChild(bilingue('Subtítulo', mp, 'subtitulo', { multilinea: true, filas: 2 }));
     var puntos = h('div', { class: 'lista' });
     mp.puntos.forEach(function (pt, i) {
       puntos.appendChild(h('div', { class: 'fila fila-punto' },
@@ -701,16 +776,49 @@
     return s;
   }
 
+  function seccionVideo() {
+    var s = seccion('sec-video', 'Video', 'Video de YouTube junto al mapa. Pega el link como lo copias del navegador o de «Compartir».');
+    if (!m.video) {
+      s.cuerpo.appendChild(h('p', { class: 'vacio', text: 'El sitio no tiene video: el mapa se muestra a la derecha.' }));
+      s.cuerpo.appendChild(boton('+ Agregar video', function () { m.video = { comentarios: [], url: '', titulo: '', tituloEn: '', oculto: false, extra: [] }; cambio(true); }, 'chip'));
+      return s;
+    }
+    var v = m.video;
+    var vista = h('div', { class: 'video-vista' });
+    function verVista() {
+      vista.textContent = '';
+      var id = idYoutube(v.url);
+      if (id) vista.appendChild(h('img', { src: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg', alt: 'Portada del video' }));
+      else if (v.url.trim()) vista.appendChild(h('p', { class: 'ayuda error-txt', text: 'Ese link no parece de un video de YouTube.' }));
+    }
+    s.cuerpo.appendChild(campo('Link del video de YouTube', v, 'url', { placeholder: 'https://www.youtube.com/watch?v=…', inputmode: 'url', alCambiar: verVista }));
+    s.cuerpo.appendChild(vista);
+    verVista();
+    s.cuerpo.appendChild(bilingue('Título (opcional)', v, 'titulo', { ayuda: 'Aparece sobre la portada del video y lo leen los lectores de pantalla.' }));
+    s.cuerpo.appendChild(h('div', { class: 'empresa-pie' },
+      h('label', { class: 'casilla' },
+        h('input', { type: 'checkbox', checked: v.oculto || null, onchange: function (ev) { v.oculto = ev.target.checked; cambio(false); } }),
+        ' Ocultar el video en el sitio'),
+      h('span', { class: 'espacio' }),
+      boton('Quitar video', function () { if (confirm('¿Quitar el video?')) { m.video = null; cambio(true); } }, 'peligro')));
+    return s;
+  }
+  function idYoutube(url) {
+    url = String(url || '').trim();
+    if (/^[\w-]{11}$/.test(url)) return url;
+    var x = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/i);
+    return x ? x[1] : null;
+  }
+
   function seccionCategoria(c, n, errores) {
     var k = clave(c);
     var s = seccion('cat-' + k, (n + 1) + '. ' + (c.nombre || 'Categoría nueva'), null);
     s.classList.add('seccion-categoria');
-    s.cuerpo.appendChild(h('div', { class: 'rejilla' },
-      campo('Nombre de la categoría', c, 'nombre', { requerido: true, alCambiar: function (v) {
-        s.querySelector('h2').textContent = (n + 1) + '. ' + (v || 'Categoría nueva');
-        if (c.idAuto) c.id = slug(v);
-      } }),
-      campo('Texto corto (menú y filtros)', c, 'corto')));
+    s.cuerpo.appendChild(bilingue('Nombre de la categoría', c, 'nombre', { requerido: true, alCambiar: function (v) {
+      s.querySelector('h2').textContent = (n + 1) + '. ' + (v || 'Categoría nueva');
+      if (c.idAuto) c.id = slug(v);
+    } }));
+    s.cuerpo.appendChild(bilingue('Texto corto (menú y filtros)', c, 'corto'));
     var lista = h('div', { class: 'empresas' });
     c.empresas.forEach(function (e, i) { lista.appendChild(tarjetaEmpresa(c, e, i, errores)); });
     if (!c.empresas.length) lista.appendChild(h('p', { class: 'vacio', text: 'Sin empresas: la categoría no se muestra en el sitio.' }));
@@ -732,22 +840,49 @@
     return s;
   }
 
+  function seccionCta() {
+    var s = seccion('sec-cta', 'Invitación (antes del pie)', 'Recuadro que invita a registrarse como nuevo cliente, justo arriba del pie de página.');
+    if (!m.cta) {
+      s.cuerpo.appendChild(h('p', { class: 'vacio', text: 'El sitio no tiene invitación.' }));
+      s.cuerpo.appendChild(boton('+ Agregar invitación', function () {
+        m.cta = { comentarios: [], url: '', oculto: false, extra: [], antetitulo: '', antetituloEn: '', titulo: '', tituloEn: '', texto: '', textoEn: '', boton: '', botonEn: '' };
+        cambio(true);
+      }, 'chip'));
+      return s;
+    }
+    var ct = m.cta;
+    s.cuerpo.appendChild(bilingue('Antetítulo (opcional)', ct, 'antetitulo', { placeholder: 'Nuevos clientes', placeholderEn: 'New customers' }));
+    s.cuerpo.appendChild(bilingue('Título', ct, 'titulo', { requerido: true }));
+    s.cuerpo.appendChild(bilingue('Descripción', ct, 'texto', { multilinea: true, filas: 2, ayuda: '**negrita**, *cursiva*, [texto](https://link)' }));
+    s.cuerpo.appendChild(bilingue('Texto del botón', ct, 'boton', { placeholder: 'Registrarme', placeholderEn: 'Sign up' }));
+    s.cuerpo.appendChild(campo('Link del botón', ct, 'url', { requerido: true, placeholder: 'https://… o un documento de docs/', inputmode: 'url', lista: 'docs-sitio',
+      ayuda: 'El mismo link en los dos idiomas. Sin link, la invitación no se muestra.' }));
+    s.cuerpo.appendChild(h('div', { class: 'empresa-pie' },
+      h('label', { class: 'casilla' },
+        h('input', { type: 'checkbox', checked: ct.oculto || null, onchange: function (ev) { ct.oculto = ev.target.checked; cambio(false); } }),
+        ' Ocultar la invitación en el sitio'),
+      h('span', { class: 'espacio' }),
+      boton('Quitar invitación', function () { if (confirm('¿Quitar la invitación?')) { m.cta = null; cambio(true); } }, 'peligro')));
+    return s;
+  }
+
   function seccionPie() {
-    if (!m.pie) m.pie = { comentarios: [], texto: '', leyenda: '', enlaces: [], redes: [], extra: [] };
+    if (!m.pie) m.pie = { comentarios: [], texto: '', textoEn: '', leyenda: '', leyendaEn: '', enlaces: [], redes: [], extra: [] };
     var p = m.pie;
     var s = seccion('sec-pie', 'Pie de página', null);
-    s.cuerpo.appendChild(campo('Texto', p, 'texto', { ayuda: '{año} se cambia solo por el año actual.' }));
-    s.cuerpo.appendChild(campo('Leyenda', p, 'leyenda', { ayuda: '**negrita**, [texto](https://link)' }));
+    s.cuerpo.appendChild(bilingue('Texto', p, 'texto', { ayuda: '{año} se cambia solo por el año actual.' }));
+    s.cuerpo.appendChild(bilingue('Leyenda', p, 'leyenda', { ayuda: '**negrita**, [texto](https://link)' }));
     var enlaces = h('div', { class: 'lista' });
     p.enlaces.forEach(function (e, i) {
       enlaces.appendChild(h('div', { class: 'fila fila-red' },
         campo(null, e, 'texto', { placeholder: 'Texto del link', clase: 'c-texto' }),
+        campo(null, e, 'textoEn', { placeholder: 'Link text in English', clase: 'c-texto' }),
         campo(null, e, 'url', { placeholder: 'https://… o un documento de docs/', clase: 'c-url', lista: 'docs-sitio' }),
         controlesFila(p.enlaces, i)));
     });
     s.cuerpo.appendChild(h('div', { class: 'bloque' },
       h('h4', { text: 'Links' }, h('span', { class: 'opcional', text: ' · sin link no se muestran' })), enlaces,
-      h('div', { class: 'agregar' }, boton('+ Link', function () { p.enlaces.push({ texto: '', url: '', comentarios: [] }); cambio(true, true); }, 'chip'))));
+      h('div', { class: 'agregar' }, boton('+ Link', function () { p.enlaces.push({ texto: '', textoEn: '', url: '', comentarios: [] }); cambio(true, true); }, 'chip'))));
     s.cuerpo.appendChild(editorRedes(p.redes));
     return s;
   }
@@ -767,12 +902,14 @@
     form.appendChild(seccionGeneral());
     form.appendChild(seccionPortada());
     form.appendChild(seccionMapa());
+    form.appendChild(seccionVideo());
     m.categorias.forEach(function (c, n) { form.appendChild(seccionCategoria(c, n, errores)); });
     form.appendChild(h('div', { class: 'agregar-categoria' }, boton('+ Agregar categoría', function () {
-      var c = { comentarios: [], id: '', idAuto: true, nombre: '', corto: '', oculta: false, empresas: [] };
+      var c = { comentarios: [], id: '', idAuto: true, nombre: '', corto: '', nombreEn: '', cortoEn: '', oculta: false, empresas: [] };
       m.categorias.push(c); cambio(true);
       setTimeout(function () { irA('cat-' + clave(c)); }, 30);
     }, 'primario')));
+    form.appendChild(seccionCta());
     form.appendChild(seccionPie());
 
     pintarIndice(errores);
@@ -790,6 +927,7 @@
     nav.appendChild(enlace('General', 'sec-general'));
     nav.appendChild(enlace('Portada', 'sec-portada'));
     nav.appendChild(enlace('Mapa', 'sec-mapa'));
+    nav.appendChild(enlace('Video', 'sec-video'));
     m.categorias.forEach(function (c) {
       var n = errores.filter(function (r) {
         return r.nivel === 'error' && (r.ancla === 'cat-' + clave(c) || c.empresas.some(function (e) { return r.ancla === 'emp-' + clave(e); }));
@@ -800,6 +938,7 @@
         nav.appendChild(enlace(e.nombre || 'Empresa nueva', 'emp-' + clave(e), ne, 'sub'));
       });
     });
+    nav.appendChild(enlace('Invitación', 'sec-cta'));
     nav.appendChild(enlace('Pie de página', 'sec-pie'));
   }
 

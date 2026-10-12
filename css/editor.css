@@ -81,6 +81,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
 .rejilla .ancho { grid-column: span 2; }
+/* Español e inglés lado a lado */
+.bilingue { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; margin-bottom: 14px; }
+.bilingue > .ayuda { grid-column: 1 / -1; margin-top: -2px; }
+.idioma { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .08em; vertical-align: 1px; color: var(--acento); background: rgba(21, 146, 211, .12); }
+.idioma-en { color: #fff; background: var(--acento); }
+.video-vista img { width: min(320px, 100%); aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; margin: 10px 0 14px; }
+.error-txt { color: #b42318; }
 .campo { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .campo label { font-size: 13px; font-weight: 700; color: var(--tinta); }
 .campo input, .campo select, .campo textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--linea); border-radius: 9px; background: var(--fondo); transition: border-color .15s, background .15s, box-shadow .15s; }
@@ -189,6 +196,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .barra-origen { display: none; }
   .seccion { padding: 16px; border-radius: 14px; }
   .rejilla .ancho { grid-column: auto; }
+  .bilingue { grid-template-columns: 1fr; }
   .fila { flex-wrap: wrap; }
   .fila .campo, .fila .c-tipo, .fila .c-num { flex: 1 1 100%; }
   .fila-red .c-tipo, .fila-dato .c-tipo { flex: 1 1 0; }

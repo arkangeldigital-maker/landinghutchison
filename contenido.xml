@@ -9,6 +9,13 @@
    • Textos ........ escribe entre las etiquetas. En <texto> y <linea> se
                      permite <b>negrita</b>, <i>cursiva</i> y <a url="...">link</a>.
    • Fotos ......... NO se escriben aquí: se toman solas de carpetas (ver FOTOS abajo).
+   • Inglés ........ la página tiene botón ES/EN. La traducción de cada texto va junto
+                     al español: en atributos con -en (titulo-en="...", nombre-en="...")
+                     o repitiendo la etiqueta con lang="en":
+                       <titulo>Hutchison Ports en México</titulo>
+                       <titulo lang="en">Hutchison Ports in Mexico</titulo>
+                     Si falta la traducción se muestra el español. Redes, links,
+                     documentos, direcciones y teléfonos son los mismos en los dos idiomas.
    • Links ......... atributo url="...".
    • Redes ......... <red tipo="web|linkedin|youtube|facebook|instagram|x|brochure|expansion" url="..."/>
                      brochure y expansion se ven como botón con texto ("Brochure",
@@ -76,7 +83,9 @@
 
   <general>
     <titulo>Hutchison Ports México</titulo>
+    <titulo lang="en">Hutchison Ports Mexico</titulo>
     <descripcion>Directorio de terminales y servicios de Hutchison Ports en México: contenedores, intermodal, cruceros, multipropósito, astillero y logística.</descripcion>
+    <descripcion lang="en">Directory of Hutchison Ports terminals and services in Mexico: containers, intermodal, cruise, multipurpose, shipyard and logistics.</descripcion>
     <color-principal>#0b2a5c</color-principal>
     <color-acento>#1592d3</color-acento>
     <!-- Cómo se acomodan los links al pie de cada tarjeta: filas | banda | compacto -->
@@ -87,9 +96,14 @@
 
   <portada>
     <antetitulo>Directorio</antetitulo>
+    <antetitulo lang="en">Directory</antetitulo>
     <titulo>Hutchison Ports en México</titulo>
+    <titulo lang="en">Hutchison Ports in Mexico</titulo>
     <texto>
       <p><b>Hutchison Ports</b> es la división de puertos y servicios relacionados de <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
+    </texto>
+    <texto lang="en">
+      <p><b>Hutchison Ports</b> is the ports and related services division of <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
     </texto>
     <redes>
       <red tipo="web" url="https://hutchisonports.com/" />
@@ -108,7 +122,7 @@
        de qué lado va el nombre, para que no se encimen.
        <corredor de="..." a="..."/> dibuja una línea animada entre dos ciudades.
        Para quitar el mapa, pon visible="no". -->
-  <mapa titulo="Presencia en México" subtitulo="Terminales en el Pacífico, el Golfo de México y el centro del país, conectadas por corredores logísticos.">
+  <mapa titulo="Presencia en México" titulo-en="Presence in Mexico" subtitulo="Terminales en el Pacífico, el Golfo de México y el centro del país, conectadas por corredores logísticos." subtitulo-en="Terminals on the Pacific, the Gulf of Mexico and central Mexico, connected by logistics corridors.">
     <punto ciudad="Ensenada" lat="31.85" lon="-116.62" etiqueta="derecha" />
     <punto ciudad="Manzanillo" lat="19.05" lon="-104.32" etiqueta="izquierda" />
     <punto ciudad="Lázaro Cárdenas" lat="17.95" lon="-102.19" etiqueta="abajo" />
@@ -119,11 +133,18 @@
     <corredor de="Atotonilco de Tula" a="Lázaro Cárdenas" />
   </mapa>
 
+  <!-- ═══════════════ VIDEO (junto al mapa) ═══════════════
+       url="..." es el link del video de YouTube (como se copia del navegador o de «Compartir»).
+       titulo="..." es opcional: se lee al tocar el video y aparece sobre la portada.
+       Para quitarlo, pon visible="no"; sin video, el mapa vuelve a la derecha. -->
+  <video url="https://www.youtube.com/watch?v=Zkq7K5Fk6MQ" />
+
   <!-- ═══════════════ TERMINAL DE CONTENEDORES ═══════════════ -->
-  <categoria id="contenedores" nombre="Terminal de contenedores" corto="Contenedores">
+  <categoria id="contenedores" nombre="Terminal de contenedores" nombre-en="Container terminals" corto="Contenedores" corto-en="Containers">
 
     <empresa id="icave">
       <nombre>ICAVE</nombre>
+      <logo>img/logos/icave.svg</logo>
       <ciudad>Veracruz</ciudad>
       <direccion>
         <linea><b>Ave. Morelos No. 159</b>, Esq. Emparan</linea>
@@ -143,6 +164,7 @@
 
     <empresa id="lct">
       <nombre>LCT</nombre>
+      <logo>img/logos/lct.svg</logo>
       <ciudad>Lázaro Cárdenas</ciudad>
       <direccion>
         <linea><b>Blvd. de Las Islas No. 1 Módulo 14</b></linea>
@@ -163,6 +185,7 @@
 
     <empresa id="eit">
       <nombre>EIT</nombre>
+      <logo>img/logos/eit.svg</logo>
       <ciudad>Ensenada</ciudad>
       <direccion>
         <linea><b>Blvd. Tte. José Azueta No. 224</b></linea>
@@ -182,6 +205,7 @@
 
     <empresa id="timsa">
       <nombre>TIMSA</nombre>
+      <logo>img/logos/timsa.svg</logo>
       <ciudad>Manzanillo</ciudad>
       <direccion>
         <linea><b>Blvd. Miguel de la Madrid No. 286</b></linea>
@@ -202,10 +226,11 @@
   </categoria>
 
   <!-- ═══════════════ TERMINAL INTERMODAL LOGÍSTICA ═══════════════ -->
-  <categoria id="intermodal" nombre="Terminal intermodal logística" corto="Intermodal">
+  <categoria id="intermodal" nombre="Terminal intermodal logística" nombre-en="Intermodal logistics terminal" corto="Intermodal" corto-en="Intermodal">
 
     <empresa id="tilh">
       <nombre>TILH</nombre>
+      <logo>img/logos/tilh.svg</logo>
       <ciudad>Atotonilco de Tula</ciudad>
       <direccion>
         <linea><b>Ctra. Federal Jorobas-Tula Km. 9.7</b></linea>
@@ -226,10 +251,11 @@
   </categoria>
 
   <!-- ═══════════════ TERMINAL DE CRUCEROS ═══════════════ -->
-  <categoria id="cruceros" nombre="Terminal de cruceros" corto="Cruceros">
+  <categoria id="cruceros" nombre="Terminal de cruceros" nombre-en="Cruise terminal" corto="Cruceros" corto-en="Cruise">
 
     <empresa id="ecv">
       <nombre>ECV</nombre>
+      <logo>img/logos/ecv.svg</logo>
       <ciudad>Ensenada</ciudad>
       <direccion>
         <linea><b>Blvd. Costero, S/N</b></linea>
@@ -250,10 +276,11 @@
   </categoria>
 
   <!-- ═══════════════ TERMINAL MULTIPROPÓSITO ═══════════════ -->
-  <categoria id="multiproposito" nombre="Terminal multipropósito" corto="Multipropósito">
+  <categoria id="multiproposito" nombre="Terminal multipropósito" nombre-en="Multipurpose terminal" corto="Multipropósito" corto-en="Multipurpose">
 
     <empresa id="lcmt">
       <nombre>LCMT</nombre>
+      <logo>img/logos/lcmt.svg</logo>
       <ciudad>Lázaro Cárdenas</ciudad>
       <direccion>
         <linea><b>Recinto Portuario</b>, 60953.</linea>
@@ -273,10 +300,11 @@
   </categoria>
 
   <!-- ═══════════════ ASTILLERO ═══════════════ -->
-  <categoria id="astillero" nombre="Astillero" corto="Astillero">
+  <categoria id="astillero" nombre="Astillero" nombre-en="Shipyard" corto="Astillero" corto-en="Shipyard">
 
     <empresa id="tng">
       <nombre>TNG</nombre>
+      <logo>img/logos/tng.svg</logo>
       <ciudad>Veracruz</ciudad>
       <direccion>
         <linea><b>Islote de San Juan de Ulúa S/N</b></linea>
@@ -299,10 +327,11 @@
   </categoria>
 
   <!-- ═══════════════ OTROS SERVICIOS ═══════════════ -->
-  <categoria id="otros-servicios" nombre="Otros servicios" corto="Otros servicios">
+  <categoria id="otros-servicios" nombre="Otros servicios" nombre-en="Other services" corto="Otros servicios" corto-en="Other services">
 
     <empresa id="hutchison-logistics">
       <nombre>Hutchison Logistics</nombre>
+      <logo>img/logos/hutchison-logistics.svg</logo>
       <ciudad>Veracruz</ciudad>
       <direccion>
         <linea><b>Ave. Morelos No. 159</b>, Esq. Emparan</linea>
@@ -320,10 +349,9 @@
       </redes>
     </empresa>
 
-    <!-- Con <logo> se usa una imagen en lugar del logotipo generado -->
     <empresa id="container-care">
       <nombre>Container Care</nombre>
-      <logo>img/container-care.png</logo>
+      <logo>img/logos/container-care.svg</logo>
       <ciudad>Veracruz</ciudad>
       <direccion>
         <linea><b>Bahía Norte S/N</b>, Interior del Recinto Portuario</linea>
@@ -348,6 +376,7 @@
       <ciudad>Veracruz</ciudad>
       <ciudad>Manzanillo</ciudad>
       <descripcion>Empresa ficticia para mostrar cómo se ven varios datos de contacto.</descripcion>
+      <descripcion lang="en">Sample company that shows how several contact details look.</descripcion>
       <direccion etiqueta="Oficina central">
         <linea><b>Av. Ejemplo No. 100</b></linea>
         <linea>Col. Centro, 91700. Veracruz, Ver.</linea>
@@ -375,16 +404,34 @@
 
   </categoria>
 
+  <!-- ═══════════════ INVITACIÓN ANTES DEL PIE (CTA) ═══════════════
+       Recuadro que invita a registrarse como nuevo cliente. url="..." es a dónde lleva el botón
+       (un link o un PDF de docs/). Sin url o con visible="no" no se muestra.
+       Cada texto lleva su traducción con lang="en". -->
+  <cta url="https://smartport.com.mx/">
+    <antetitulo>Nuevos clientes</antetitulo>
+    <antetitulo lang="en">New customers</antetitulo>
+    <titulo>Regístrate como nuevo cliente</titulo>
+    <titulo lang="en">Register as a new customer</titulo>
+    <texto>Da de alta tu empresa y empieza a operar con las terminales y servicios de Hutchison Ports en México.</texto>
+    <texto lang="en">Sign up your company and start working with Hutchison Ports terminals and services in Mexico.</texto>
+    <boton>Registrarme</boton>
+    <boton lang="en">Sign up</boton>
+  </cta>
+
   <!-- PIE DE PÁGINA
        En <texto>, {año} se cambia solo por el año actual.
        <leyenda> va debajo del copyright. <enlace> son los links del pie (se muestran en el
-       orden escrito); si un enlace no tiene url, no aparece. -->
+       orden escrito); si un enlace no tiene url, no aparece. texto-en="..." es el texto en inglés. -->
   <pie>
     <texto>© {año} Hutchison Ports México. Todos los derechos reservados.</texto>
+    <texto lang="en">© {año} Hutchison Ports Mexico. All rights reserved.</texto>
     <leyenda>Hutchison Ports es miembro de <b>CK Hutchison Holdings Limited</b>.</leyenda>
-    <enlace url="https://hutchisonports.com/">Hutchison Ports global</enlace>
+    <leyenda lang="en">Hutchison Ports is a member of <b>CK Hutchison Holdings Limited</b>.</leyenda>
+    <enlace url="https://hutchisonports.com/" texto-en="Hutchison Ports global">Hutchison Ports global</enlace>
+    <enlace url="https://smartport.com.mx/">Smartport</enlace>
     <!-- ⚠ Pendiente: pon aquí el link o el PDF del aviso de privacidad (ej. docs/aviso-de-privacidad.pdf) -->
-    <enlace url="">Aviso de privacidad</enlace>
+    <enlace url="" texto-en="Privacy notice">Aviso de privacidad</enlace>
     <redes>
       <red tipo="web" url="https://hutchisonports.com/" />
       <red tipo="linkedin" url="https://www.linkedin.com/company/hutchison-ports/" />
