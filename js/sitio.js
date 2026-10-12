@@ -972,7 +972,7 @@
       nuevo.setAttribute('class', 'logo-svg');
       nuevo.setAttribute('role', 'img');
       nuevo.setAttribute('aria-label', nombre);
-      if (vb.length === 4 && vb[2] > 0 && vb[3] > 0) nuevo.style.aspectRatio = vb[2] + ' / ' + vb[3];
+      if (vb.length === 4 && vb[2] > 0 && vb[3] > 0) { nuevo.style.aspectRatio = vb[2] + ' / ' + vb[3]; nuevo.dataset.proporcion = vb[2] / vb[3]; }
       var img = caja.querySelector('img');
       if (img) caja.replaceChild(nuevo, img);
     });
@@ -1208,27 +1208,34 @@
      (girar el celular, filtros) y cuando termina de cargar la tipografía. */
   function ajustarLogos() {
     var cabs = Array.prototype.slice.call(document.querySelectorAll('.tarjeta-cab'));
+    var HOLGURA = 12; // el logo nunca llega pegado al borde de la tarjeta
     function ajustar(cab) {
       var logo = cab.querySelector('.tarjeta-logo');
       if (!logo || !cab.clientWidth) return;
       var img = logo.querySelector('img, .logo-svg');
       var ciudades = cab.querySelector('.tarjeta-ciudades');
       logo.style.fontSize = '';
-      if (img) img.style.height = '';
+      if (img) { img.style.height = ''; img.style.width = ''; }
       cab.classList.remove('apilado');
+      // Proporción del logo en imagen: del viewBox (SVG) o del archivo ya cargado.
+      var prop = img ? +(img.dataset.proporcion || (img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0)) : 0;
       var alto = img ? img.getBoundingClientRect().height || 40 : 0;
-      var disponible = cab.clientWidth - (ciudades ? ciudades.offsetWidth + 14 : 0); // 12 px de separación + 2 de holgura
-      var natural = logo.scrollWidth;
-      if (natural <= disponible) return;
+      function medir(h) { // ancho y alto explícitos: así ningún navegador lo estira de más
+        if (!prop) { img.style.height = h.toFixed(1) + 'px'; return; }
+        img.style.height = h.toFixed(1) + 'px';
+        img.style.width = (h * prop).toFixed(1) + 'px';
+      }
+      var natural = prop ? alto * prop : logo.scrollWidth;
+      var disponible = cab.clientWidth - (ciudades ? ciudades.offsetWidth + 14 : HOLGURA); // 12 px de separación + 2 de holgura
+      if (natural <= disponible) { if (prop) medir(alto); return; }
       // Si el logo tendría que achicarse mucho (nombres largos), la ciudad baja a su propio renglón.
       if (ciudades && disponible / natural < 0.8) {
         cab.classList.add('apilado');
-        disponible = cab.clientWidth;
-        if (natural <= disponible) return;
+        disponible = cab.clientWidth - HOLGURA;
+        if (natural <= disponible) { if (prop) medir(alto); return; }
       }
-      var escala = Math.max(0.55, disponible / natural); // nunca más chico que 55 %
-      if (img) img.style.height = (alto * escala).toFixed(1) + 'px';
-      else logo.style.fontSize = (parseFloat(getComputedStyle(logo).fontSize) * escala).toFixed(1) + 'px';
+      if (img) medir(alto * disponible / natural); // la imagen se achica lo necesario para caber
+      else logo.style.fontSize = (parseFloat(getComputedStyle(logo).fontSize) * Math.max(0.55, disponible / natural)).toFixed(1) + 'px';
     }
     cabs.forEach(ajustar);
     // Los logos en imagen se cargan al acercarse: se vuelve a ajustar cuando ya tienen tamaño.
