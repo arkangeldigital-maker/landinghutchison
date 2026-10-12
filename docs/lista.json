@@ -1,6 +1,11 @@
 {
   "documentos": [
     {
+      "nombre": "descarga.pdf",
+      "url": "docs/descarga.pdf",
+      "tamano": 86020
+    },
+    {
       "nombre": "EIT_Flyer2026.pdf",
       "url": "docs/EIT_Flyer2026.pdf",
       "tamano": 2037759
