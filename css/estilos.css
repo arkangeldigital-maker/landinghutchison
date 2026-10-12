@@ -395,7 +395,8 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .tarjeta-logo-marca b { font-weight: 800; }
 .tarjeta-logo-nombre { font-size: .55em; line-height: .74; font-weight: 800; letter-spacing: .005em; text-transform: uppercase; white-space: nowrap; }
 .tarjeta-logo-nombre.largo { font-size: .36em; line-height: .74; }
-.tarjeta-logo-img img, .tarjeta-logo-img .logo-svg { display: block; height: 46px; width: auto; max-width: none; object-fit: contain; }
+.tarjeta-logo-img { max-width: 100%; }
+.tarjeta-logo-img img, .tarjeta-logo-img .logo-svg { display: block; height: 46px; width: auto; max-width: 100%; object-fit: contain; }
 /* Logos oficiales en SVG: en modo nocturno el azul marino se aclara para que se lea */
 .logo-svg .logo-oscuro { transition: fill .35s; }
 html[data-tema="oscuro"] .logo-svg .logo-oscuro { fill: var(--azul-texto); }
