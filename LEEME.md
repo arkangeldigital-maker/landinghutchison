@@ -172,8 +172,9 @@ Si una empresa no tiene `<logo>`, se genera el logotipo "HUTCHISON PORTS + NOMBR
 Si tiene `<logo>img/archivo.png</logo>`, se usa esa imagen.
 
 Los logos de las terminales están en `img/logos/` y son los SVG de sus páginas oficiales (sin la franja blanca
-del símbolo, para que se vean sobre cualquier fondo). Hutchison Logistics y Container Care no tienen SVG en su
-página: se armaron con el mismo símbolo y «HUTCHISONPORTS» de los oficiales y el nombre en Montserrat ExtraBold.
+del símbolo, para que se vean sobre cualquier fondo). Hutchison Logistics no tiene SVG en su página: se armó con
+el mismo símbolo y «HUTCHISONPORTS» de los oficiales y el nombre en Montserrat ExtraBold. Container Care es su
+logo de siempre (`img/container-care.png`) pasado a vectores.
 Si un logo es `.svg`, en modo nocturno sus partes azul marino (`class="logo-oscuro"`) se aclaran solas.
 
 ## Pendientes
