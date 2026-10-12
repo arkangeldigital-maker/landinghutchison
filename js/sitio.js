@@ -22,6 +22,57 @@
   var ES_LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   var SIN_MOVIMIENTO = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ============================ IDIOMA ============================
+     Español (es) o inglés (en). Se elige con el botón ES/EN de la cabecera o con ?lang=en en la URL,
+     y se recuerda en este navegador. Los textos del XML en inglés van en atributos con -en
+     (titulo-en="…", nombre-en="…") o en una etiqueta repetida con lang="en" (<titulo lang="en">…).
+     Si falta la traducción, se muestra el texto en español. */
+  var IDIOMAS = ['es', 'en'];
+  var IDIOMA = (function () {
+    var pedido = (location.search.match(/[?&]lang=(es|en)\b/) || [])[1];
+    if (pedido) return pedido;
+    var guardado; try { guardado = localStorage.getItem('idioma'); } catch (e) {}
+    return IDIOMAS.indexOf(guardado) !== -1 ? guardado : 'es';
+  })();
+  document.documentElement.lang = IDIOMA;
+
+  // Textos fijos de la página (los que no vienen del XML).
+  var TEXTOS = {
+    es: {
+      categorias: 'Categorías', abrirMenu: 'Abrir menú', cerrarMenu: 'Cerrar menú', menu: 'Menú', directorio: 'Directorio',
+      modoNocturno: 'Modo nocturno', aClaro: 'Cambiar a modo claro', aOscuro: 'Cambiar a modo nocturno',
+      idioma: 'English version', idiomaCorto: 'EN',
+      fotos: 'Fotos', foto: 'Foto', irDirectorio: 'Ir al directorio',
+      mapaAria: 'Mapa de México con las ciudades donde opera Hutchison Ports', verEnDirectorio: 'Ver en el directorio',
+      empresa: 'empresa', empresas: 'empresas', Empresa: 'Empresa', Empresas: 'Empresas',
+      linea: 'Línea de negocio', lineas: 'Líneas de negocio', ciudad: 'Ciudad', ciudades: 'Ciudades',
+      verTodasCiudades: 'Ver todas las ciudades', verEnMaps: 'Ver en Google Maps', verEnMapsCorto: 'ver en Google Maps',
+      linkPendiente: 'Link pendiente', fotoDe: 'Foto de', de: 'de', fotosDe: 'Fotos de', carrusel: 'carrusel',
+      verFoto: 'Ver foto', fotoAnterior: 'Foto anterior', fotoSiguiente: 'Foto siguiente',
+      filtrarCategoria: 'Filtrar por categoría', todas: 'Todas', buscar: 'Buscar empresa, ciudad o correo…',
+      buscarAria: 'Buscar en el directorio', filtrar: 'Filtrar', sinResultados: 'No encontramos resultados. ',
+      verTodo: 'Ver todo el directorio', quitarFiltro: 'Quitar filtro: ', arriba: 'Volver arriba',
+      video: 'Video', reproducir: 'Reproducir video'
+    },
+    en: {
+      categorias: 'Categories', abrirMenu: 'Open menu', cerrarMenu: 'Close menu', menu: 'Menu', directorio: 'Directory',
+      modoNocturno: 'Dark mode', aClaro: 'Switch to light mode', aOscuro: 'Switch to dark mode',
+      idioma: 'Versión en español', idiomaCorto: 'ES',
+      fotos: 'Photos', foto: 'Photo', irDirectorio: 'Go to the directory',
+      mapaAria: 'Map of Mexico with the cities where Hutchison Ports operates', verEnDirectorio: 'See in the directory',
+      empresa: 'company', empresas: 'companies', Empresa: 'Company', Empresas: 'Companies',
+      linea: 'Business line', lineas: 'Business lines', ciudad: 'City', ciudades: 'Cities',
+      verTodasCiudades: 'See all cities', verEnMaps: 'See on Google Maps', verEnMapsCorto: 'see on Google Maps',
+      linkPendiente: 'Link pending', fotoDe: 'Photo of', de: 'of', fotosDe: 'Photos of', carrusel: 'carousel',
+      verFoto: 'See photo', fotoAnterior: 'Previous photo', fotoSiguiente: 'Next photo',
+      filtrarCategoria: 'Filter by category', todas: 'All', buscar: 'Search company, city or email…',
+      buscarAria: 'Search the directory', filtrar: 'Filter', sinResultados: 'No results found. ',
+      verTodo: 'See the whole directory', quitarFiltro: 'Remove filter: ', arriba: 'Back to top',
+      video: 'Video', reproducir: 'Play video'
+    }
+  };
+  function T(clave) { return TEXTOS[IDIOMA][clave] || TEXTOS.es[clave] || clave; }
+
   /* ============================ ÍCONOS ============================ */
 
   var ICONOS = {
@@ -47,7 +98,10 @@
     flecha: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14m0 0-6-6m6 6 6-6"/></svg>',
     arriba: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>'
   };
-  var NOMBRES_RED = { web: 'Sitio web', linkedin: 'LinkedIn', youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', x: 'X', brochure: 'Brochure', expansion: 'Expansión' };
+  var NOMBRES_RED = {
+    es: { web: 'Sitio web', linkedin: 'LinkedIn', youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', x: 'X', brochure: 'Brochure', expansion: 'Expansión' },
+    en: { web: 'Website', linkedin: 'LinkedIn', youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', x: 'X', brochure: 'Brochure', expansion: 'Expansion' }
+  };
   // Tipos que se muestran como botón con texto (no como ícono en recuadro).
   var BOTONES = { brochure: true, expansion: true };
 
@@ -80,6 +134,29 @@
     return n ? n.textContent.replace(/\s+/g, ' ').trim() : '';
   }
   function visible(el) { return !/^(no|false|0)$/i.test(el.getAttribute('visible') || ''); }
+
+  // Etiquetas repetidas con lang="en" son la traducción: no cuentan como contenido aparte.
+  function esTraduccion(el) { return !!el.getAttribute('lang') && el.getAttribute('lang') !== 'es'; }
+  // La etiqueta en el idioma actual (si tiene texto), o la de español.
+  function hijoIdioma(el, nombre) {
+    var todos = hijos(el, nombre);
+    var base = todos.filter(function (n) { return !esTraduccion(n); })[0] || null;
+    if (IDIOMA !== 'es') {
+      var trad = todos.filter(function (n) { return n.getAttribute('lang') === IDIOMA && n.textContent.trim(); })[0];
+      if (trad) return trad;
+    }
+    return base;
+  }
+  function txtIdioma(el, nombre) { var n = hijoIdioma(el, nombre); return n ? txt(n) : ''; }
+  // Atributo en el idioma actual: titulo-en="…"; si está vacío, titulo="…".
+  function atr(el, nombre) {
+    if (!el) return '';
+    if (IDIOMA !== 'es') {
+      var v = (el.getAttribute(nombre + '-' + IDIOMA) || '').trim();
+      if (v) return v;
+    }
+    return el.getAttribute(nombre) || '';
+  }
 
   /* ============================ SEGURIDAD ============================ */
 
@@ -203,7 +280,7 @@
   function buscarFaltantes(doc) {
     if (location.protocol === 'file:') return Promise.resolve({}); // sin servidor no se puede revisar
     var urls = {};
-    ['red', 'enlace'].forEach(function (tag) {
+    ['red', 'enlace', 'cta'].forEach(function (tag) {
       Array.prototype.forEach.call(doc.getElementsByTagName(tag), function (el) {
         var url = (el.getAttribute('url') || '').trim();
         if (esArchivoLocal(url)) urls[url.split('#')[0]] = true;
@@ -256,7 +333,7 @@
     if (!href || href === '#') {
       a.setAttribute('aria-disabled', 'true');
       a.classList.add('pendiente');
-      a.title = (a.title ? a.title + ' · ' : '') + 'Link pendiente';
+      a.title = (a.title ? a.title + ' · ' : '') + T('linkPendiente');
       return a;
     }
     a.href = deSitio(href);
@@ -318,7 +395,7 @@
       if (!url || url === '#' || !visible(r)) return;
       if (faltaArchivo(url)) return; // el documento no está en el servidor
       // texto="..." cambia lo que dice el botón (o el nombre que se lee al pasar el cursor).
-      var nombre = r.getAttribute('texto') || NOMBRES_RED[tipo];
+      var nombre = atr(r, 'texto') || NOMBRES_RED[IDIOMA][tipo];
       var a = h('a', { class: 'red red-' + tipo, title: nombre, 'aria-label': nombre });
       var li = h('li');
       if (BOTONES[tipo]) {
@@ -337,17 +414,17 @@
   }
 
   function cabecera(raiz, categorias) {
-    var nav = h('nav', { class: 'nav', id: 'nav', 'aria-label': 'Categorías' });
+    var nav = h('nav', { class: 'nav', id: 'nav', 'aria-label': T('categorias') });
     categorias.forEach(function (c) {
       nav.appendChild(h('a', { href: '#' + c.id, 'data-cat': c.id, text: c.corto }));
     });
-    var burger = h('button', { class: 'burger', type: 'button', 'aria-label': 'Abrir menú', 'aria-expanded': 'false', 'aria-controls': 'mnav' },
+    var burger = h('button', { class: 'burger', type: 'button', 'aria-label': T('abrirMenu'), 'aria-expanded': 'false', 'aria-controls': 'mnav' },
       h('span'), h('span'), h('span'));
     menuMovil(raiz, categorias, burger);
     return h('div', { class: 'contenedor cabecera-in' },
       h('a', { href: '#inicio', class: 'cabecera-logo' }, logotipoPrincipal()),
       nav,
-      h('div', { class: 'cabecera-acciones' }, botonTema(), burger));
+      h('div', { class: 'cabecera-acciones' }, botonIdioma(), botonTema(), burger));
   }
 
   /* Botón de modo nocturno. index.html ya puso data-tema antes de pintar;
@@ -360,8 +437,8 @@
     function pintar() {
       var oscuro = raizHtml.getAttribute('data-tema') === 'oscuro';
       boton.setAttribute('aria-pressed', String(oscuro));
-      boton.setAttribute('aria-label', 'Modo nocturno');
-      boton.title = oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo nocturno';
+      boton.setAttribute('aria-label', T('modoNocturno'));
+      boton.title = oscuro ? T('aClaro') : T('aOscuro');
       var meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute('content', oscuro ? '#0a1424' : '#0b2a5c');
     }
@@ -391,6 +468,31 @@
   }
   var escuchaTema = false;
 
+  /* Botón de idioma (ES/EN): muestra el idioma al que cambia. Vuelve a armar la página
+     en el otro idioma sin recargar y lo recuerda en este navegador. */
+  function botonIdioma() {
+    var otro = IDIOMA === 'es' ? 'en' : 'es';
+    var boton = h('button', { class: 'idioma-boton', type: 'button', lang: otro, title: T('idioma'), 'aria-label': T('idioma') },
+      h('span', { 'aria-hidden': 'true', text: T('idiomaCorto') }));
+    boton.addEventListener('click', function () { cambiarIdioma(otro); });
+    return boton;
+  }
+  function cambiarIdioma(idioma) {
+    if (IDIOMAS.indexOf(idioma) === -1 || idioma === IDIOMA) return;
+    IDIOMA = idioma;
+    document.documentElement.lang = idioma;
+    try { localStorage.setItem('idioma', idioma); } catch (e) {}
+    // Si la URL trae ?lang=, se actualiza para que al recargar o compartir quede el mismo idioma.
+    if (/[?&]lang=/.test(location.search) && history.replaceState) {
+      history.replaceState(null, '', location.pathname + location.search.replace(/([?&]lang=)(es|en)\b/, '$1' + idioma) + location.hash);
+    }
+    if (docActual) {
+      render(docActual, true);
+      var b = document.querySelector('.idioma-boton');
+      if (b) b.focus({ preventScroll: true });
+    }
+  }
+
   /* Menú móvil (mismo efecto que Boreal): un círculo azul se expande desde la
      hamburguesa, los links suben uno tras otro y entran las diagonales de la marca. */
   function menuMovil(raiz, categorias, burger) {
@@ -410,10 +512,10 @@
       extras.style.setProperty('--i', categorias.length);
     }
 
-    var mnav = h('nav', { class: 'mnav', id: 'mnav', 'aria-label': 'Menú', inert: '' },
+    var mnav = h('nav', { class: 'mnav', id: 'mnav', 'aria-label': T('menu'), inert: '' },
       h('div', { class: 'mnav-fondo', 'aria-hidden': 'true' }),
       h('div', { class: 'mnav-in' },
-        h('p', { class: 'mnav-titulo', text: 'Directorio' }),
+        h('p', { class: 'mnav-titulo', text: T('directorio') }),
         links,
         extras));
     document.body.appendChild(mnav);
@@ -427,7 +529,7 @@
       }
       document.body.classList.toggle('menu-abierto', si);
       burger.setAttribute('aria-expanded', String(si));
-      burger.setAttribute('aria-label', si ? 'Cerrar menú' : 'Abrir menú');
+      burger.setAttribute('aria-label', si ? T('cerrarMenu') : T('abrirMenu'));
       if (si) mnav.removeAttribute('inert'); else mnav.setAttribute('inert', '');
     }
     burger.addEventListener('click', function () { abrir(!document.body.classList.contains('menu-abierto')); });
@@ -456,16 +558,16 @@
 
     // Título palabra por palabra para animarlo.
     var titulo = h('h1', { class: 'portada-titulo' });
-    txt(p, 'titulo').split(' ').forEach(function (palabra, i) {
+    txtIdioma(p, 'titulo').split(' ').forEach(function (palabra, i) {
       titulo.appendChild(h('span', { class: 'palabra', style: '--i:' + i }, h('span', { text: palabra })));
       titulo.appendChild(document.createTextNode(' '));
     });
 
     var puntos = null;
     if (fotos.children.length > 1) {
-      puntos = h('div', { class: 'portada-puntos', role: 'tablist', 'aria-label': 'Fotos' });
+      puntos = h('div', { class: 'portada-puntos', role: 'tablist', 'aria-label': T('fotos') });
       Array.prototype.forEach.call(fotos.children, function (_, i) {
-        puntos.appendChild(h('button', { type: 'button', class: i === 0 ? 'activo' : '', 'aria-label': 'Foto ' + (i + 1), 'data-i': i }));
+        puntos.appendChild(h('button', { type: 'button', class: i === 0 ? 'activo' : '', 'aria-label': T('foto') + ' ' + (i + 1), 'data-i': i }));
       });
     }
 
@@ -474,12 +576,12 @@
       h('div', { class: 'portada-velo' }),
       h('div', { class: 'portada-diagonal', 'aria-hidden': 'true' }),
       h('div', { class: 'contenedor portada-in' },
-        txt(p, 'antetitulo') ? h('p', { class: 'antetitulo', text: txt(p, 'antetitulo') }) : null,
+        txtIdioma(p, 'antetitulo') ? h('p', { class: 'antetitulo', text: txtIdioma(p, 'antetitulo') }) : null,
         titulo,
-        h('div', { class: 'portada-texto' }, parrafos(hijo(p, 'texto'))),
+        h('div', { class: 'portada-texto' }, parrafos(hijoIdioma(p, 'texto'))),
         enlacesPortada(hijo(p, 'redes'))),
       puntos,
-      h('a', { class: 'portada-bajar', href: '#directorio', 'aria-label': 'Ir al directorio', html: ICONOS.flecha }));
+      h('a', { class: 'portada-bajar', href: '#directorio', 'aria-label': T('irDirectorio'), html: ICONOS.flecha }));
   }
 
   /* ============================ PRESENCIA (cifras + mapa) ============================ */
@@ -527,7 +629,7 @@
     puntos.forEach(function (p) { buscar[p.ciudad] = p; });
 
     var d = MEXICO.map(function (c, i) { var xy = proyectar(c[0], c[1]); return (i ? 'L' : 'M') + xy[0].toFixed(1) + ' ' + xy[1].toFixed(1); }).join('') + 'Z';
-    var raiz = svg('svg', { class: 'mapa-svg', viewBox: '-10 -6 610 400', role: 'img', 'aria-label': 'Mapa de México con las ciudades donde opera Hutchison Ports' },
+    var raiz = svg('svg', { class: 'mapa-svg', viewBox: '-10 -6 610 400', role: 'img', 'aria-label': T('mapaAria') },
       svg('defs', null,
         svg('pattern', { id: 'mapa-puntitos', width: 7, height: 7, patternUnits: 'userSpaceOnUse' },
           svg('circle', { cx: 1.5, cy: 1.5, r: 1.1, class: 'mapa-puntito' }))),
@@ -562,7 +664,7 @@
       cuenta.textContent = p.n;
       var g = svg('g', {
         class: 'mapa-punto', transform: 'translate(' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ')', 'data-ciudad': p.ciudad,
-        tabindex: 0, role: 'button', 'aria-label': p.ciudad + ': ' + p.n + (p.n === 1 ? ' empresa' : ' empresas') + '. Ver en el directorio',
+        tabindex: 0, role: 'button', 'aria-label': p.ciudad + ': ' + p.n + ' ' + (p.n === 1 ? T('empresa') : T('empresas')) + '. ' + T('verEnDirectorio'),
         style: '--i:' + i
       },
         svg('g', { class: 'mapa-punto-in' }, // se agranda en celular (CSS) sin mover el punto
@@ -596,25 +698,61 @@
         h('span', { class: 'cifra-num', 'data-num': n, text: SIN_MOVIMIENTO ? String(n) : '0' }),
         h('span', { class: 'cifra-etiqueta', text: etiqueta }));
     }
-    var lista = h('ul', { class: 'presencia-ciudades' }, nombresCiudades.map(function (c) {
-      return h('li', null, h('button', { type: 'button', 'data-ciudad': c },
-        h('span', { class: 'presencia-ciudad', text: c }),
-        h('span', { class: 'presencia-n', text: String(porCiudad[c].length) }),
-        h('span', { class: 'presencia-empresas', text: porCiudad[c].join(' · ') })));
-    }));
+    var titulo = atr(nodoMapa, 'titulo'), subtitulo = atr(nodoMapa, 'subtitulo');
+    var video = videoYoutube(hijo(raiz, 'video'));
+    var cajaMapa = mapa ? h('div', { class: 'presencia-mapa revelar' }, mapa,
+      h('button', { type: 'button', class: 'presencia-limpiar', tabindex: '-1' }, h('span', { 'aria-hidden': 'true', text: '✕' }), ' ' + T('verTodasCiudades'))) : null;
 
-    return h('section', { class: 'presencia' + (mapa ? ' con-mapa' : ''), id: 'presencia', 'aria-label': 'Presencia en México' },
+    // Con video: a la izquierda título, cifras y mapa; a la derecha el video.
+    // Sin video: el mapa ocupa la columna derecha.
+    return h('section', { class: 'presencia' + (mapa ? ' con-mapa' : '') + (video ? ' con-video' : ''), id: 'presencia', 'aria-label': titulo || T('directorio') },
       h('div', { class: 'contenedor presencia-in' },
         h('div', { class: 'presencia-info revelar' },
-          nodoMapa && nodoMapa.getAttribute('titulo') ? h('h2', { class: 'presencia-titulo', text: nodoMapa.getAttribute('titulo') }) : null,
-          nodoMapa && nodoMapa.getAttribute('subtitulo') ? h('p', { class: 'presencia-sub', text: nodoMapa.getAttribute('subtitulo') }) : null,
+          titulo ? h('h2', { class: 'presencia-titulo', text: titulo }) : null,
+          subtitulo ? h('p', { class: 'presencia-sub', text: subtitulo }) : null,
           h('div', { class: 'cifras-in' },
-            cifra(empresas, empresas === 1 ? 'Empresa' : 'Empresas'),
-            cifra(categorias.length, categorias.length === 1 ? 'Línea de negocio' : 'Líneas de negocio'),
-            cifra(nombresCiudades.length, nombresCiudades.length === 1 ? 'Ciudad' : 'Ciudades')),
-          lista),
-        mapa ? h('div', { class: 'presencia-mapa revelar' }, mapa,
-          h('button', { type: 'button', class: 'presencia-limpiar', tabindex: '-1' }, h('span', { 'aria-hidden': 'true', text: '✕' }), ' Ver todas las ciudades')) : null));
+            cifra(empresas, empresas === 1 ? T('Empresa') : T('Empresas')),
+            cifra(categorias.length, categorias.length === 1 ? T('linea') : T('lineas')),
+            cifra(nombresCiudades.length, nombresCiudades.length === 1 ? T('ciudad') : T('ciudades'))),
+          video ? cajaMapa : null),
+        video || cajaMapa));
+  }
+
+  /* ---------- Video de YouTube junto al mapa ----------
+     <video url="https://www.youtube.com/watch?v=…" titulo="…" titulo-en="…"/> en el XML.
+     Primero se ve la portada del video con un botón de play; el reproductor de YouTube
+     se carga solo al tocarlo (así la página no se hace lenta). */
+  function idYoutube(url) {
+    url = String(url || '').trim();
+    if (/^[\w-]{11}$/.test(url)) return url;
+    var m = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/i);
+    return m ? m[1] : null;
+  }
+  function videoYoutube(nodo) {
+    if (!nodo || !visible(nodo)) return null;
+    var id = idYoutube(nodo.getAttribute('url'));
+    if (!id) return null;
+    var titulo = atr(nodo, 'titulo');
+    var portadaVideo = h('img', { class: 'video-portada', src: 'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg', alt: '', loading: 'lazy', decoding: 'async' });
+    // Algunos videos no tienen portada en alta: se usa la normal.
+    portadaVideo.addEventListener('load', function () { if (portadaVideo.naturalWidth < 200) portadaVideo.src = 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'; });
+    portadaVideo.addEventListener('error', function () {
+      if (portadaVideo.src.indexOf('hqdefault') === -1) portadaVideo.src = 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg';
+      else portadaVideo.hidden = true; // sin portada queda el fondo azul con el botón de play
+    });
+    var play = h('button', { type: 'button', class: 'video-play', 'aria-label': T('reproducir') + (titulo ? ': ' + titulo : '') },
+      h('span', { class: 'video-play-icono', 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>' }));
+    var marco = h('div', { class: 'video-marco' }, portadaVideo, h('span', { class: 'video-velo', 'aria-hidden': 'true' }), play,
+      titulo ? h('span', { class: 'video-titulo', 'aria-hidden': 'true', text: titulo }) : null);
+    play.addEventListener('click', function () {
+      var src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&hl=' + IDIOMA;
+      marco.textContent = '';
+      marco.classList.add('reproduciendo');
+      marco.appendChild(h('iframe', { src: src, title: titulo || T('video'), allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share', allowfullscreen: '', referrerpolicy: 'strict-origin-when-cross-origin' }));
+    });
+    return h('div', { class: 'presencia-video revelar' },
+      marco,
+      h('span', { class: 'video-esquina', 'aria-hidden': 'true' }));
   }
 
 
@@ -655,9 +793,9 @@
       var mapaUrl = urlMapa(el, lineas);
       valor = direccion;
       if (mapaUrl) {
-        valor = prepararLink(h('a', { class: 'direccion-link', title: 'Ver en Google Maps' }, direccion), mapaUrl);
+        valor = prepararLink(h('a', { class: 'direccion-link', title: T('verEnMaps') }, direccion), mapaUrl);
         var leer = lineas.length ? lineas.map(function (l) { return txt(l); }).join(', ') : txt(el);
-        valor.setAttribute('aria-label', leer + ' (ver en Google Maps)');
+        valor.setAttribute('aria-label', leer + ' (' + T('verEnMapsCorto') + ')');
         if (!valor.getAttribute('href')) valor = direccion;
       }
     } else {
@@ -751,25 +889,25 @@
     var cont = hijo(e.el, 'fotos');
     if (cont && !visible(cont)) return null;
     var fotos = (FOTOS[carpetaEmpresa(e.id)] || []).map(function (src, i, todas) {
-      return { src: src, alt: 'Foto de ' + nombre + (todas.length > 1 ? ' (' + (i + 1) + ' de ' + todas.length + ')' : '') };
+      return { src: src, alt: T('fotoDe') + ' ' + nombre + (todas.length > 1 ? ' (' + (i + 1) + ' ' + T('de') + ' ' + todas.length + ')' : '') };
     });
     if (!fotos.length) return null;
     var varias = fotos.length > 1;
 
     var pista = h('div', { class: 'tslider-pista', tabindex: varias ? '0' : null },
       fotos.map(function (f, i) {
-        return h('figure', { class: 'tslider-foto', 'aria-label': (i + 1) + ' de ' + fotos.length },
+        return h('figure', { class: 'tslider-foto', 'aria-label': (i + 1) + ' ' + T('de') + ' ' + fotos.length },
           h('img', { src: f.src, alt: f.alt, loading: 'lazy', decoding: 'async' }));
       }));
-    var caja = h('div', { class: 'tslider' + (varias ? ' varias' : ''), role: 'region', 'aria-roledescription': 'carrusel', 'aria-label': 'Fotos de ' + nombre }, pista);
+    var caja = h('div', { class: 'tslider' + (varias ? ' varias' : ''), role: 'region', 'aria-roledescription': T('carrusel'), 'aria-label': T('fotosDe') + ' ' + nombre }, pista);
     if (!varias) return caja;
 
     var cuenta = h('span', { class: 'tslider-cuenta', 'aria-hidden': 'true', text: '1 / ' + fotos.length });
     var puntos = h('div', { class: 'tslider-puntos' }, fotos.map(function (_, i) {
-      return h('button', { type: 'button', class: i === 0 ? 'activo' : null, 'aria-label': 'Ver foto ' + (i + 1) });
+      return h('button', { type: 'button', class: i === 0 ? 'activo' : null, 'aria-label': T('verFoto') + ' ' + (i + 1) });
     }));
-    var ant = h('button', { type: 'button', class: 'tslider-btn tslider-ant', 'aria-label': 'Foto anterior', html: ICONOS.izq });
-    var sig = h('button', { type: 'button', class: 'tslider-btn tslider-sig', 'aria-label': 'Foto siguiente', html: ICONOS.der });
+    var ant = h('button', { type: 'button', class: 'tslider-btn tslider-ant', 'aria-label': T('fotoAnterior'), html: ICONOS.izq });
+    var sig = h('button', { type: 'button', class: 'tslider-btn tslider-sig', 'aria-label': T('fotoSiguiente'), html: ICONOS.der });
     caja.appendChild(ant);
     caja.appendChild(sig);
     caja.appendChild(puntos);
@@ -811,9 +949,38 @@
     return caja;
   }
 
-  // Texto en el que busca el buscador (sin rutas de fotos ni links).
+  /* Logos .svg (img/logos/…): se insertan dentro de la página en lugar de como imagen,
+     para que en modo nocturno el azul marino se aclare (partes con class="logo-oscuro").
+     Si no se puede leer el archivo (p. ej. abriendo con doble clic), se queda la imagen normal. */
+  var SVGS = {}; // url → promesa con el texto del archivo
+  function incrustarSvg(caja, url, nombre) {
+    if (location.protocol === 'file:') return Promise.resolve();
+    SVGS[url] = SVGS[url] || fetch(url).then(function (r) { return r.ok ? r.text() : null; }).catch(function () { return null; });
+    return SVGS[url].then(function (texto) {
+      if (!texto) return;
+      var doc = new DOMParser().parseFromString(texto, 'image/svg+xml');
+      var svgEl = doc.documentElement;
+      if (svgEl.nodeName !== 'svg' || doc.getElementsByTagName('parsererror').length) return;
+      // Solo dibujo: fuera scripts, enlaces y eventos.
+      Array.prototype.slice.call(svgEl.querySelectorAll('script, foreignObject, a, use, image, style')).forEach(function (n) { n.remove(); });
+      Array.prototype.forEach.call(svgEl.querySelectorAll('*'), function (n) {
+        Array.prototype.slice.call(n.attributes).forEach(function (a) { if (/^on|href$/i.test(a.name)) n.removeAttribute(a.name); });
+      });
+      var vb = (svgEl.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+      var nuevo = document.importNode(svgEl, true);
+      ['width', 'height', 'id'].forEach(function (a) { nuevo.removeAttribute(a); });
+      nuevo.setAttribute('class', 'logo-svg');
+      nuevo.setAttribute('role', 'img');
+      nuevo.setAttribute('aria-label', nombre);
+      if (vb.length === 4 && vb[2] > 0 && vb[3] > 0) nuevo.style.aspectRatio = vb[2] + ' / ' + vb[3];
+      var img = caja.querySelector('img');
+      if (img) caja.replaceChild(nuevo, img);
+    });
+  }
+
+  // Texto en el que busca el buscador (sin rutas de fotos, logos ni links).
   function textoBusqueda(el) {
-    return Array.prototype.filter.call(el.children, function (n) { return n.nodeName !== 'fotos' && n.nodeName !== 'redes'; })
+    return Array.prototype.filter.call(el.children, function (n) { return n.nodeName !== 'fotos' && n.nodeName !== 'redes' && n.nodeName !== 'logo'; })
       .map(function (n) { return n.textContent; }).join(' ').replace(/\s+/g, ' ');
   }
 
@@ -821,6 +988,7 @@
     var logo;
     if (e.logo) {
       logo = h('div', { class: 'tarjeta-logo tarjeta-logo-img' }, h('img', { src: e.logo, alt: e.nombre, loading: 'lazy' }));
+      if (/\.svg([?#]|$)/i.test(e.logo)) logo.listo = incrustarSvg(logo, e.logo, e.nombre);
     } else {
       logo = h('div', { class: 'tarjeta-logo' },
         h('span', { html: SIMBOLO }).firstChild,
@@ -843,19 +1011,19 @@
       h('span', { class: 'tarjeta-esquina', 'aria-hidden': 'true' }),
       sliderFotos(e),
       h('header', { class: 'tarjeta-cab' }, logo, ciudades),
-      hijo(e.el, 'descripcion') ? h('div', { class: 'tarjeta-descripcion' }, parrafos(hijo(e.el, 'descripcion'))) : null,
+      hijoIdioma(e.el, 'descripcion') ? h('div', { class: 'tarjeta-descripcion' }, parrafos(hijoIdioma(e.el, 'descripcion'))) : null,
       contacto.children.length ? contacto : null,
       pieTarjeta);
     return art;
   }
 
   function directorio(categorias) {
-    var chips = h('div', { class: 'filtro-chips', role: 'group', 'aria-label': 'Filtrar por categoría' },
-      h('button', { type: 'button', class: 'chip activo', 'data-filtro': '', text: 'Todas' }),
+    var chips = h('div', { class: 'filtro-chips', role: 'group', 'aria-label': T('filtrarCategoria') },
+      h('button', { type: 'button', class: 'chip activo', 'data-filtro': '', text: T('todas') }),
       categorias.map(function (c) { return h('button', { type: 'button', class: 'chip', 'data-filtro': c.id, text: c.corto }); }));
     var buscador = h('label', { class: 'buscador' },
       h('span', { class: 'buscador-icono', html: ICONOS.buscar }),
-      h('input', { type: 'search', id: 'buscar', placeholder: 'Buscar empresa, ciudad o correo…', 'aria-label': 'Buscar en el directorio', autocomplete: 'off' }));
+      h('input', { type: 'search', id: 'buscar', placeholder: T('buscar'), 'aria-label': T('buscarAria'), autocomplete: 'off' }));
 
     var secciones = categorias.map(function (c, n) {
       // --n: columnas que ocupa la categoría en pantallas grandes (una por empresa, máximo 4)
@@ -863,7 +1031,7 @@
         h('header', { class: 'categoria-cab revelar' },
           h('span', { class: 'categoria-num', text: ('0' + (n + 1)).slice(-2) }),
           h('h2', { text: c.nombre }),
-          h('span', { class: 'categoria-cuenta', text: c.empresas.length + (c.empresas.length === 1 ? ' empresa' : ' empresas') }),
+          h('span', { class: 'categoria-cuenta', text: c.empresas.length + ' ' + (c.empresas.length === 1 ? T('empresa') : T('empresas')) }),
           h('span', { class: 'categoria-linea', 'aria-hidden': 'true' })),
         h('div', { class: 'tarjetas' }, c.empresas.map(tarjeta)));
     });
@@ -875,8 +1043,8 @@
           // Solo en celular: botón que abre y cierra el panel de filtros.
           h('button', { type: 'button', class: 'filtros-boton', id: 'filtros-boton', 'aria-expanded': 'false', 'aria-controls': 'filtros-panel' },
             h('span', { class: 'filtros-boton-icono', html: ICONOS.filtro }),
-            h('span', { class: 'filtros-boton-texto', text: 'Filtrar' }),
-            h('span', { class: 'filtros-boton-resumen', id: 'filtros-resumen', text: 'Todas' }),
+            h('span', { class: 'filtros-boton-texto', text: T('filtrar') }),
+            h('span', { class: 'filtros-boton-resumen', id: 'filtros-resumen', text: T('todas') }),
             h('span', { class: 'filtros-boton-flecha', 'aria-hidden': 'true' })),
           h('div', { class: 'filtros-panel', id: 'filtros-panel' }, chips,
             h('button', { type: 'button', class: 'filtro-ciudad', id: 'filtro-ciudad', hidden: 'hidden' },
@@ -884,9 +1052,32 @@
               h('span', { class: 'filtro-ciudad-nombre' }),
               h('span', { class: 'filtro-ciudad-x', 'aria-hidden': 'true', text: '✕' })),
             buscador)),
-        h('p', { class: 'sin-resultados', id: 'sin-resultados', hidden: 'hidden' }, 'No encontramos resultados. ',
-          h('button', { type: 'button', class: 'link-limpiar', text: 'Ver todo el directorio' })),
+        h('p', { class: 'sin-resultados', id: 'sin-resultados', hidden: 'hidden' }, T('sinResultados'),
+          h('button', { type: 'button', class: 'link-limpiar', text: T('verTodo') })),
         h('div', { class: 'categorias' }, secciones)));
+  }
+
+  /* ---------- Invitación antes del pie (CTA) ----------
+     <cta url="https://…"> con <antetitulo>, <titulo>, <texto> y <boton> (cada uno con su lang="en").
+     Sin url o con visible="no" no se muestra. */
+  function invitacion(raiz) {
+    var c = hijo(raiz, 'cta');
+    if (!c || !visible(c)) return null;
+    var url = urlSegura(c.getAttribute('url'));
+    var titulo = txtIdioma(c, 'titulo');
+    if (!url || url === '#' || faltaArchivo(url) || !titulo) return null;
+    var boton = prepararLink(h('a', { class: 'cta-boton' },
+      h('span', { text: txtIdioma(c, 'boton') || NOMBRES_RED[IDIOMA].web }),
+      h('span', { class: 'cta-boton-flecha', 'aria-hidden': 'true', html: ICONOS.der })), url);
+    // Va al final del directorio (comparte su fondo), justo antes del pie.
+    return h('aside', { class: 'cta', id: 'registro', 'aria-label': titulo },
+        h('div', { class: 'cta-caja revelar' },
+          h('span', { class: 'cta-fondo', 'aria-hidden': 'true' }, h('span', { class: 'cta-diagonal cta-diagonal-1' }), h('span', { class: 'cta-diagonal cta-diagonal-2' }), h('span', { class: 'cta-brillo' })),
+          h('div', { class: 'cta-textos' },
+            txtIdioma(c, 'antetitulo') ? h('p', { class: 'cta-antetitulo', text: txtIdioma(c, 'antetitulo') }) : null,
+            h('h2', { class: 'cta-titulo', text: titulo }),
+            hijoIdioma(c, 'texto') ? h('div', { class: 'cta-texto' }, parrafos(hijoIdioma(c, 'texto'))) : null),
+          boton));
   }
 
   // {año} en el XML se cambia por el año actual (para el © del pie).
@@ -898,22 +1089,24 @@
     var enlaces = h('ul', { class: 'pie-enlaces' });
     hijos(p, 'enlace').filter(visible).forEach(function (e) {
       var url = urlSegura(e.getAttribute('url'));
-      if (!url || url === '#' || !txt(e) || faltaArchivo(url)) return;
-      var a = prepararLink(inline(e, h('a')), url);
+      // En inglés el texto va en texto-en="…" (si falta, se usa el de español).
+      var traducido = IDIOMA !== 'es' ? (e.getAttribute('texto-' + IDIOMA) || '').trim() : '';
+      if (!url || url === '#' || !(traducido || txt(e)) || faltaArchivo(url)) return;
+      var a = prepararLink(traducido ? h('a', { text: traducido }) : inline(e, h('a')), url);
       if (/^https?:/i.test(url)) a.appendChild(h('span', { class: 'pie-externo', 'aria-hidden': 'true', text: ' ↗' }));
       enlaces.appendChild(h('li', null, a));
     });
-    var leyenda = hijo(p, 'leyenda');
+    var leyenda = hijoIdioma(p, 'leyenda');
     return h('div', { class: 'contenedor' },
       h('div', { class: 'pie-in' },
         h('div', { class: 'pie-marca' }, logotipoPrincipal('logotipo-claro')),
         redes(hijo(p, 'redes'), 'redes-pie')),
       h('div', { class: 'pie-legal' },
         h('div', { class: 'pie-textos' },
-          txt(p, 'texto') ? h('p', { text: conAnio(txt(p, 'texto')) }) : null,
+          txtIdioma(p, 'texto') ? h('p', { text: conAnio(txtIdioma(p, 'texto')) }) : null,
           leyenda && txt(leyenda) ? inline(leyenda, h('p', { class: 'pie-leyenda' })) : null),
         enlaces.children.length ? enlaces : null),
-      h('button', { class: 'arriba', type: 'button', 'aria-label': 'Volver arriba', html: ICONOS.arriba }));
+      h('button', { class: 'arriba', type: 'button', 'aria-label': T('arriba'), html: ICONOS.arriba }));
   }
 
   /* ============================ MODELO ============================ */
@@ -930,11 +1123,11 @@
           redes: hijo(e, 'redes')
         };
       });
-      var nombre = c.getAttribute('nombre') || 'Categoría ' + (i + 1);
+      var nombre = atr(c, 'nombre') || 'Categoría ' + (i + 1);
       return {
         id: (c.getAttribute('id') || 'categoria-' + (i + 1)).replace(/[^a-z0-9-]/gi, ''),
         nombre: nombre,
-        corto: c.getAttribute('corto') || nombre,
+        corto: atr(c, 'corto') || nombre,
         empresas: empresas
       };
     }).filter(function (c) { return c.empresas.length; });
@@ -944,7 +1137,10 @@
 
   var limpiezas = [];
 
+  var docActual = null; // el XML en pantalla (para volver a armar la página al cambiar de idioma)
+
   function render(doc, rapido) {
+    docActual = doc;
     limpiezas.forEach(function (f) { f(); });
     limpiezas = [];
 
@@ -952,9 +1148,9 @@
     var g = hijo(raiz, 'general');
     var categorias = modelo(raiz);
 
-    document.title = txt(g, 'titulo') || document.title;
+    document.title = txtIdioma(g, 'titulo') || document.title;
     var meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute('content', txt(g, 'descripcion'));
+    if (meta) meta.setAttribute('content', txtIdioma(g, 'descripcion'));
     var raizCss = document.documentElement.style;
     var c1 = colorSeguro(txt(g, 'color-principal')), c2 = colorSeguro(txt(g, 'color-acento'));
     if (c1) raizCss.setProperty('--azul', c1); else raizCss.removeProperty('--azul');
@@ -972,7 +1168,9 @@
     reemplazar('cabecera', cabecera(raiz, categorias));
     var main = document.getElementById('contenido');
     main.textContent = '';
-    [portada(raiz), cifras(categorias, raiz), directorio(categorias)].forEach(function (n) { if (n) main.appendChild(n); });
+    var dir = directorio(categorias), cta = invitacion(raiz);
+    if (cta) { dir.classList.add('con-cta'); dir.querySelector('.contenedor').appendChild(cta); }
+    [portada(raiz), cifras(categorias, raiz), dir].forEach(function (n) { if (n) main.appendChild(n); });
     reemplazar('pie', pie(raiz));
 
     document.body.classList.remove('cargando');
@@ -1013,15 +1211,23 @@
     function ajustar(cab) {
       var logo = cab.querySelector('.tarjeta-logo');
       if (!logo || !cab.clientWidth) return;
-      var img = logo.querySelector('img');
+      var img = logo.querySelector('img, .logo-svg');
       var ciudades = cab.querySelector('.tarjeta-ciudades');
       logo.style.fontSize = '';
       if (img) img.style.height = '';
+      cab.classList.remove('apilado');
+      var alto = img ? img.getBoundingClientRect().height || 40 : 0;
       var disponible = cab.clientWidth - (ciudades ? ciudades.offsetWidth + 14 : 0); // 12 px de separación + 2 de holgura
       var natural = logo.scrollWidth;
       if (natural <= disponible) return;
+      // Si el logo tendría que achicarse mucho (nombres largos), la ciudad baja a su propio renglón.
+      if (ciudades && disponible / natural < 0.8) {
+        cab.classList.add('apilado');
+        disponible = cab.clientWidth;
+        if (natural <= disponible) return;
+      }
       var escala = Math.max(0.55, disponible / natural); // nunca más chico que 55 %
-      if (img) img.style.height = (40 * escala).toFixed(1) + 'px';
+      if (img) img.style.height = (alto * escala).toFixed(1) + 'px';
       else logo.style.fontSize = (parseFloat(getComputedStyle(logo).fontSize) * escala).toFixed(1) + 'px';
     }
     cabs.forEach(ajustar);
@@ -1029,6 +1235,8 @@
     cabs.forEach(function (cab) {
       var img = cab.querySelector('.tarjeta-logo img');
       if (img && !img.complete) img.addEventListener('load', function () { ajustar(cab); }, { once: true });
+      var logo = cab.querySelector('.tarjeta-logo');
+      if (logo && logo.listo) logo.listo.then(function () { ajustar(cab); });
     });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { cabs.forEach(ajustar); });
     // Respaldo: también al cambiar el tamaño de la ventana o girar el celular.
@@ -1321,7 +1529,7 @@
         var cuenta = sec.querySelector('.categoria-cuenta');
         var todas = sec.querySelectorAll('.tarjeta').length;
         if (!cuenta.dataset.original) cuenta.dataset.original = cuenta.textContent;
-        cuenta.textContent = visibles < todas ? visibles + ' de ' + cuenta.dataset.original : cuenta.dataset.original;
+        cuenta.textContent = visibles < todas ? visibles + ' ' + T('de') + ' ' + cuenta.dataset.original : cuenta.dataset.original;
       });
       sinRes.hidden = total > 0;
       document.querySelectorAll('.presencia [data-ciudad]').forEach(function (b) {
@@ -1332,7 +1540,7 @@
       var etiqueta = document.getElementById('filtro-ciudad');
       etiqueta.hidden = !ciudad;
       etiqueta.querySelector('.filtro-ciudad-nombre').textContent = ciudad;
-      etiqueta.setAttribute('aria-label', 'Quitar filtro: ' + ciudad);
+      etiqueta.setAttribute('aria-label', T('quitarFiltro') + ciudad);
       var presencia = document.querySelector('.presencia');
       if (presencia) presencia.classList.toggle('filtrando', !!ciudad);
       var limpiar = document.querySelector('.presencia-limpiar');
@@ -1340,7 +1548,7 @@
       // Resumen en el botón de celular: lo que está filtrado, o "Todas".
       var chipActivo = document.querySelector('.chip.activo');
       var partes = [cat && chipActivo ? chipActivo.textContent : '', ciudad, input.value.trim() ? '“' + input.value.trim() + '”' : ''].filter(Boolean);
-      document.getElementById('filtros-resumen').textContent = partes.length ? partes.join(' · ') : 'Todas';
+      document.getElementById('filtros-resumen').textContent = partes.length ? partes.join(' · ') : T('todas');
       barra.classList.toggle('con-filtro', partes.length > 0);
     }
     // Celular: el panel de filtros se abre con el botón y se cierra al elegir, al tocar fuera o con Esc.
@@ -1454,6 +1662,8 @@
       });
       return;
     }
+    var registro = e.target.closest && e.target.closest('a.cta-boton[href]');
+    if (registro) { medir('clic_registro', { idioma: IDIOMA, destino: registro.getAttribute('href') }); return; }
     var llegar = e.target.closest && e.target.closest('a.direccion-link');
     if (llegar) {
       var t = llegar.closest('.tarjeta');

@@ -113,6 +113,37 @@ con la contraseña en `admin/acceso.json`.
 | Empresas (nombre, logo, ciudad, dirección, teléfono, correos, redes) | `<empresa>` |
 | Ocultar una empresa o categoría sin borrarla | `visible="no"` |
 | Texto y redes del pie | `<pie>` |
+| Video de YouTube junto al mapa | `<video url="…">` |
+| Invitación a registrarse (antes del pie) | `<cta url="…">` con `<titulo>`, `<texto>`, `<boton>` |
+| Textos en inglés | atributos `…-en="…"` o la etiqueta repetida con `lang="en"` |
+
+## Español e inglés
+
+En la cabecera hay un botón **EN / ES** que cambia todo el sitio de idioma sin recargar; la elección se recuerda
+en ese navegador. También se puede compartir el link en inglés con `?lang=en` (por ejemplo `index.html?lang=en`).
+
+La traducción de cada texto va en el XML junto al español:
+
+```xml
+<titulo>Hutchison Ports en México</titulo>
+<titulo lang="en">Hutchison Ports in Mexico</titulo>
+<categoria nombre="Astillero" nombre-en="Shipyard" corto="Astillero" corto-en="Shipyard">
+<enlace url="…" texto-en="Privacy notice">Aviso de privacidad</enlace>
+```
+
+En el editor cada texto tiene sus dos campos (ES y EN). Si el campo en inglés queda vacío, se muestra el español.
+Redes, links, documentos, direcciones, teléfonos y correos son los mismos en los dos idiomas.
+
+## Video y mapa
+
+El video de YouTube que va a la derecha del mapa se cambia en el editor (sección **Video**) o en el XML con
+`<video url="https://www.youtube.com/watch?v=…"/>`. Primero se ve la portada del video y el reproductor se carga
+al tocarla, así la página no se hace lenta. Sin video, el mapa vuelve a la columna derecha.
+
+## Invitación antes del pie
+
+El recuadro «Regístrate como nuevo cliente» se edita en el editor (sección **Invitación**): antetítulo, título,
+descripción, texto del botón (en los dos idiomas) y el link del botón. Sin link no se muestra.
 
 ## Modo nocturno
 
@@ -138,7 +169,13 @@ Las fotos **no se escriben en el XML**. Se ponen en carpetas dentro de `img/`:
 Las cifras (empresas, líneas de negocio, ciudades) y la lista de ciudades **se calculan solas** a partir del XML.
 
 Si una empresa no tiene `<logo>`, se genera el logotipo "HUTCHISON PORTS + NOMBRE" con el símbolo de la marca.
-Si tiene `<logo>img/archivo.png</logo>`, se usa esa imagen (como Container Care).
+Si tiene `<logo>img/archivo.png</logo>`, se usa esa imagen.
+
+Los logos de las terminales están en `img/logos/` y son los SVG de sus páginas oficiales (sin la franja blanca
+del símbolo, para que se vean sobre cualquier fondo). Hutchison Logistics no tiene SVG en su página: se armó con
+el mismo símbolo y «HUTCHISONPORTS» de los oficiales y el nombre en Montserrat ExtraBold. Container Care es su
+logo de siempre (`img/container-care.png`) pasado a vectores.
+Si un logo es `.svg`, en modo nocturno sus partes azul marino (`class="logo-oscuro"`) se aclaran solas.
 
 ## Pendientes
 
