@@ -408,7 +408,7 @@
        Recuadro que invita a registrarse como nuevo cliente. url="..." es a dónde lleva el botón
        (un link o un PDF de docs/). Sin url o con visible="no" no se muestra.
        Cada texto lleva su traducción con lang="en". -->
-  <cta url="https://smartport.com.mx/">
+  <cta url="https://google.com">
     <antetitulo>Nuevos clientes</antetitulo>
     <antetitulo lang="en">New customers</antetitulo>
     <titulo>Regístrate como nuevo cliente</titulo>
