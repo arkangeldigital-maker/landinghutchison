@@ -176,6 +176,7 @@ del símbolo, para que se vean sobre cualquier fondo). Hutchison Logistics no ti
 el mismo símbolo y «HUTCHISONPORTS» de los oficiales y el nombre en Montserrat ExtraBold. Container Care es su
 logo de siempre (`img/container-care.png`) pasado a vectores.
 Si un logo es `.svg`, en modo nocturno sus partes azul marino (`class="logo-oscuro"`) se aclaran solas.
+El logo de Hutchison Ports de la cabecera y del pie es el SVG oficial de hutchisonports.com (`LOGOTIPO` en `js/sitio.js`).
 
 ## Pendientes
 

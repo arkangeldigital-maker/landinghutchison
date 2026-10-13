@@ -44,8 +44,7 @@ address { font-style: normal; }
 .simbolo-claro { fill: var(--acento); }
 .simbolo-oscuro { fill: var(--azul-texto); }
 .logotipo { display: inline-flex; align-items: center; gap: .22em; font-size: 42px; color: var(--azul-texto); }
-.logotipo-texto { font-size: .5em; font-weight: 500; letter-spacing: -.005em; line-height: 1; }
-.logotipo-texto b { font-weight: 800; }
+.logotipo-svg { height: 1em; width: 5.647em; flex: none; display: block; } /* 190.3 × 33.7, el oficial */
 .logotipo-claro, .logotipo-claro .simbolo-oscuro { color: #fff; }
 .logotipo-claro .simbolo-oscuro { fill: #fff; }
 
@@ -609,7 +608,6 @@ html[data-tema="oscuro"] .cta-caja { box-shadow: 0 30px 60px -28px rgba(0, 0, 0,
 }
 @media (max-width: 700px) {
   .logotipo { font-size: 34px; }
-  .logotipo-texto { white-space: nowrap; }
   /* Tres botones en la cabecera (idioma, luna, menú): más compactos para que el logo quepa en una línea */
   .cabecera-in { gap: 12px; }
   .cabecera-acciones { gap: 6px; }
