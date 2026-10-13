@@ -408,7 +408,7 @@
        Recuadro que invita a registrarse como nuevo cliente. url="..." es a dónde lleva el botón
        (un link o un PDF de docs/). Sin url o con visible="no" no se muestra.
        Cada texto lleva su traducción con lang="en". -->
-  <cta url="https://google.com">
+  <cta url="https://analytics.clickdimensions.com/hutchisonportsecvcom-aotuz/pages/dijdgzf2eeecmbfvqcn4g.html?PageId=83c38874f637ef11840a6045bd008de2">
     <antetitulo>Nuevos clientes</antetitulo>
     <antetitulo lang="en">New customers</antetitulo>
     <titulo>Regístrate como nuevo cliente</titulo>
