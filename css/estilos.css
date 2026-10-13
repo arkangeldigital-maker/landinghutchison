@@ -141,7 +141,7 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .corte { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .portada-diagonal .corte-franja { fill: var(--acento); opacity: .9; }
 .portada-diagonal .corte-triangulo { fill: #fff; opacity: .16; }
-.portada-diagonal .corte-panel { fill: var(--fondo); }
+.portada-diagonal .corte-panel { fill: #002E6D; } /* azul marino del logo */
 .portada-diagonal polygon { animation: deslizar 1.4s .5s var(--curva) both; }
 .portada-diagonal .corte-triangulo { animation-delay: .6s; }
 .portada-diagonal .corte-panel { animation-delay: .7s; }
