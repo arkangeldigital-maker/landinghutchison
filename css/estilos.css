@@ -139,12 +139,12 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .portada-diagonal { position: absolute; left: 0; right: 0; bottom: -1px; height: 34vh; z-index: -1; pointer-events: none; }
 /* El corte de la marca: SVG que se escala parejo (las franjas no se adelgazan) pegado abajo a la derecha */
 .corte { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.corte-claro { fill: #009ADE; }   /* los colores del símbolo del logo */
+/* los colores del símbolo del logo (la celeste lleva su degradado en el SVG) */
 .corte-blanco { fill: #fff; }
 .corte-oscuro { fill: #002E6D; }
 .portada-diagonal polygon { animation: deslizar 1.4s .5s var(--curva) both; }
-.portada-diagonal .corte-blanco { animation-delay: .6s; }
-.portada-diagonal .corte-oscuro { animation-delay: .7s; }
+.portada-diagonal .corte-blanco { display: none; } /* en la portada, la franja blanca queda como espacio entre las dos */
+.portada-diagonal .corte-oscuro { animation-delay: .7s; fill-opacity: .7; } /* deja ver la foto */
 @keyframes deslizar { from { transform: translate(60px, 35px); opacity: 0; } }
 
 .portada-in { padding: calc(var(--cab-alto) + 40px) 0 120px; }
@@ -483,6 +483,8 @@ html[data-tema="oscuro"] .logo-svg .logo-oscuro { fill: var(--azul-texto); }
 .cta-fondo { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .cta-fondo::before { content: ''; position: absolute; inset: 0; opacity: .08; background: repeating-linear-gradient(135deg, #fff 0 1px, transparent 1px 22px); -webkit-mask-image: linear-gradient(90deg, transparent 10%, #000 70%); mask-image: linear-gradient(90deg, transparent 10%, #000 70%); }
 .cta-diagonal { position: absolute; inset: 0; }
+.cta-diagonal .corte-blanco { display: none; }
+.cta-diagonal .corte-oscuro { fill-opacity: .7; }
 .cta-brillo { position: absolute; width: 520px; height: 520px; left: -160px; top: -260px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--acento) 45%, transparent), transparent 65%); opacity: .55; animation: cta-brillo 10s ease-in-out infinite alternate; }
 @keyframes cta-brillo { to { transform: translate(120px, 60px); opacity: .8; } }
 .cta-textos { max-width: 640px; }

@@ -109,9 +109,11 @@
   // Proporciones del símbolo oficial: 37.7 × 49.6 (más alto que ancho), con la franja blanca en diagonal.
   var SIMBOLO = '<svg class="simbolo" viewBox="0 0 37.7 49.6" aria-hidden="true"><polygon points="0,0 37.7,0 37.7,6.5 0,28.6" class="simbolo-claro"/><polygon points="0,38.6 37.7,16.6 37.7,49.6 0,49.6" class="simbolo-oscuro"/></svg>';
   // Corte de la marca: las tres piezas del símbolo del logo (celeste, franja blanca y azul marino),
-  // paralelas y con el mismo ángulo (~30°), en la esquina inferior derecha.
+  // paralelas y con el mismo ángulo (~30°), en la esquina inferior derecha. La celeste va en degradado:
+  // opaca abajo y al 20 % arriba.
   var CORTE = '<svg class="corte" viewBox="300 0 700 400" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">' +
-    '<polygon class="corte-claro" points="1000,0 1000,99.3 485,400 315,400"/>' +
+    '<defs><linearGradient id="corte-degradado" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#009ADE" stop-opacity=".2"/><stop offset="1" stop-color="#009ADE"/></linearGradient></defs>' +
+    '<polygon class="corte-claro" fill="url(#corte-degradado)" points="1000,0 1000,99.3 485,400 315,400"/>' +
     '<polygon class="corte-blanco" points="1000,99.3 1000,125.6 530,400 485,400"/>' +
     '<polygon class="corte-oscuro" points="1000,125.6 1000,400 530,400"/></svg>';
   // Logotipo oficial de Hutchison Ports (hutchisonports.com/media/g/src/logo-en.svg), sin la franja blanca.
@@ -1079,7 +1081,7 @@
     // Va al final del directorio (comparte su fondo), justo antes del pie.
     return h('aside', { class: 'cta', id: 'registro', 'aria-label': titulo },
         h('div', { class: 'cta-caja revelar' },
-          h('span', { class: 'cta-fondo', 'aria-hidden': 'true' }, h('span', { class: 'cta-diagonal', html: CORTE }), h('span', { class: 'cta-brillo' })),
+          h('span', { class: 'cta-fondo', 'aria-hidden': 'true' }, h('span', { class: 'cta-diagonal', html: CORTE.replace(/corte-degradado/g, 'corte-degradado-cta') }), h('span', { class: 'cta-brillo' })),
           h('div', { class: 'cta-textos' },
             txtIdioma(c, 'antetitulo') ? h('p', { class: 'cta-antetitulo', text: txtIdioma(c, 'antetitulo') }) : null,
             h('h2', { class: 'cta-titulo', text: titulo }),
