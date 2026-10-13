@@ -46,7 +46,7 @@ address { font-style: normal; }
 .logotipo { display: inline-flex; align-items: center; gap: .22em; font-size: 42px; color: var(--azul-texto); }
 .logotipo-svg { height: 1em; width: 5.647em; flex: none; display: block; } /* 190.3 × 33.7, el oficial */
 .logotipo-claro, .logotipo-claro .simbolo-oscuro { color: #fff; }
-.logotipo-claro .simbolo-oscuro { fill: #fff; }
+.logotipo-claro .simbolo-oscuro, .logotipo-claro .simbolo-claro { fill: #fff; }
 
 /* ---------- Modo nocturno ----------
    js/sitio.js pone data-tema="oscuro" en <html> (botón de la luna en la cabecera).
