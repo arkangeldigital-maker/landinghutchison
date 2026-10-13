@@ -663,14 +663,17 @@
     // dentro del punto, Safari de iPhone a veces dejaba de pintarlos.
     var rotulos = svg('g', { class: 'mapa-rotulos', 'aria-hidden': 'true' });
     puntos.forEach(function (p, i) {
-      var r = 7 + Math.min(p.n, 6) * 1.1;
+      var r = 9 + Math.min(p.n, 6) * 1.1; // un poco más grande que con número, para que el logo se distinga
       var dx = { derecha: r + 7, izquierda: -(r + 7), arriba: 0, abajo: 0 }[p.lado] || r + 7;
       var dy = { arriba: -(r + 9), abajo: r + 17 }[p.lado] || 4.5;
       var anchor = { izquierda: 'end', arriba: 'middle', abajo: 'middle' }[p.lado] || 'start';
       var etiqueta = svg('text', { class: 'mapa-etiqueta', x: dx, y: dy, 'text-anchor': anchor });
       etiqueta.textContent = p.ciudad;
-      var cuenta = svg('text', { class: 'mapa-cuenta', x: 0, y: 3.6, 'text-anchor': 'middle' });
-      cuenta.textContent = p.n;
+      // En el centro, el símbolo de Hutchison a color (37.7 × 49.6), centrado y a la medida del punto.
+      var esc = r * 1.2 / 49.6;
+      var logo = svg('g', { class: 'mapa-logo', transform: 'scale(' + esc.toFixed(3) + ') translate(-18.85 -24.8)' },
+        svg('polygon', { points: '0,0 37.7,0 37.7,6.5 0,28.6', fill: '#1592d3' }),
+        svg('polygon', { points: '0,38.6 37.7,16.6 37.7,49.6 0,49.6', fill: '#0b2a5c' }));
       var g = svg('g', {
         class: 'mapa-punto', transform: 'translate(' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ')', 'data-ciudad': p.ciudad,
         tabindex: 0, role: 'button', 'aria-label': p.ciudad + ': ' + p.n + ' ' + (p.n === 1 ? T('empresa') : T('empresas')) + '. ' + T('verEnDirectorio'),
@@ -678,8 +681,7 @@
       },
         svg('g', { class: 'mapa-punto-in' }, // se agranda en celular (CSS) sin mover el punto
           svg('circle', { class: 'mapa-pulso', r: r }),
-          svg('circle', { class: 'mapa-nucleo', r: r }),
-          cuenta));
+          svg('g', { class: 'mapa-nucleo' }, svg('circle', { class: 'mapa-disco', r: r }), logo)));
       grupo.appendChild(g);
       rotulos.appendChild(svg('g', {
         class: 'mapa-rotulo', transform: 'translate(' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ')', 'data-ciudad': p.ciudad, style: '--i:' + i
