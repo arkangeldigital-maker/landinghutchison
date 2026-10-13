@@ -144,7 +144,7 @@ body.cargando .cabecera, body.cargando .pie { display: none; }
 .corte-oscuro { fill: #002E6D; }
 .portada-diagonal polygon { animation: deslizar 1.4s .5s var(--curva) both; }
 .portada-diagonal .corte-blanco { display: none; } /* en la portada, la franja blanca queda como espacio entre las dos */
-.portada-diagonal .corte-oscuro { animation-delay: .7s; }
+.portada-diagonal .corte-oscuro { animation-delay: .7s; fill-opacity: .7; } /* deja ver la foto */
 @keyframes deslizar { from { transform: translate(60px, 35px); opacity: 0; } }
 
 .portada-in { padding: calc(var(--cab-alto) + 40px) 0 120px; }
