@@ -59,15 +59,23 @@
   </script>
 
   <!-- ═══════════════ MEDICIÓN DE VISITAS (Google Analytics 4) ═══════════════
-       Reemplaza G-XXXXXXXXXX (aparece 2 veces) por tu ID de medición y quita
-       las marcas de comentario de las dos líneas <script>…</script> de abajo.
-       O borra este bloque y pega aquí el código completo que te da Google Analytics.
+       ID PROVISIONAL: cuando cambie el dominio final, reemplaza G-HYLGEQNFGL
+       en la línea "var GA_ID" de abajo (es el único lugar donde aparece).
        Con Analytics activo, el sitio registra además qué Brochure/Expansión se abren
        (evento "abrir_documento") y qué ciudades se eligen en el mapa ("elegir_ciudad"). -->
-  <!--
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-XXXXXXXXXX');</script>
-  -->
+  <script>
+    var GA_ID = 'G-HYLGEQNFGL';
+    (function () {
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+      document.head.appendChild(s);
+    })();
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', GA_ID);
+  </script>
   <!-- ═══════════════ FIN MEDICIÓN DE VISITAS ═══════════════ -->
 </head>
 <body class="cargando">
