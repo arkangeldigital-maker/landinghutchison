@@ -1,7 +1,18 @@
 {
+ "img/ecv": [
+  "img/ecv/1.jpg"
+ ],
+ "img/eit": [
+  "img/eit/1.jpg"
+ ],
  "img/icave": [
-  "img/icave/1.jpg",
-  "img/icave/2.jpg"
+  "img/icave/1.jpg"
+ ],
+ "img/lcmt": [
+  "img/lcmt/1.jpg"
+ ],
+ "img/lct": [
+  "img/lct/1.jpg"
  ],
  "img/portada": [
   "img/portada/1.jpg",
@@ -9,7 +20,9 @@
   "img/portada/3.jpg"
  ],
  "img/tilh": [
-  "img/tilh/1.jpg",
-  "img/tilh/2.jpg"
+  "img/tilh/1.jpg"
+ ],
+ "img/timsa": [
+  "img/timsa/1.jpg"
  ]
 }
