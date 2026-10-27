@@ -184,7 +184,7 @@ El logo de Hutchison Ports de la cabecera y del pie es el SVG oficial de hutchis
 - Los links a archivos del sitio (`docs/archivo.pdf`) se revisan al cargar: **si el archivo no existe, el botón no se muestra** (no hay links rotos). El editor avisa cuáles faltan. Los links a otros sitios (`https://…`) no se pueden revisar y se muestran siempre.
 - Los sitios web de cada terminal se dedujeron del dominio de su correo: **hay que verificarlos**.
 - Las fotos de la portada se extrajeron del PDF. Para mejor calidad, reemplázalas por los originales en alta resolución (mismo nombre: `img/portada/1.jpg`, `2.jpg`).
-- Cada terminal tiene su foto en `img/<id>/1.jpg` (ICAVE, LCT, EIT, TIMSA, TILH, ECV y LCMT), tomada de la carpeta de fotos originales. **TNG todavía no tiene foto**: falta subir `img/tng/1.jpg`.
+- Cada terminal tiene su foto en `img/<id>/1.jpg` (ICAVE, LCT, EIT, TIMSA, TILH, ECV, LCMT y TNG), tomada de la carpeta de fotos originales.
 
 ## Azure mostrando el contenido que vive en GitHub
 
