@@ -100,13 +100,13 @@
     <titulo>Hutchison Ports en México</titulo>
     <titulo lang="en">Hutchison Ports in Mexico</titulo>
     <texto>
-      <p><b>Hutchison Ports</b> es la división de puertos y servicios relacionados de <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
+      <p><a url="https://hutchisonports.com/en/index.html"><b>Hutchison Ports</b></a> es la división de puertos y servicios relacionados de <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
     </texto>
     <texto lang="en">
-      <p><b>Hutchison Ports</b> is the ports and related services division of <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
+      <p><a url="https://hutchisonports.com/en/index.html"><b>Hutchison Ports</b></a> is the ports and related services division of <a url="https://www.ckh.com.hk/">CK Hutchison Holdings Limited (CK Hutchison)</a>.</p>
     </texto>
     <redes>
-      <red tipo="web" url="https://hutchisonports.com.mx/" />
+      <red tipo="web" url="https://hutchisonports.com/en/index.html" />
       <red tipo="linkedin" url="https://www.linkedin.com/company/hutchison-ports/" />
       <red tipo="youtube" url="https://www.youtube.com/c/HutchisonPortsM%C3%A9xico" />
       <red tipo="facebook" url="" />
